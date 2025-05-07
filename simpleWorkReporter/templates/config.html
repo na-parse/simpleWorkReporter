@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>simpleWorkReporter - Configuration</title>
+  <link rel="stylesheet" href="../static/css/style.css"/>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <h1 class="app-title">simpleWorkReporter</h1>
+        <div class="header-actions">
+          <a href="index.html" class="header-btn">Back to Main Page</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="config-form">
+      <h2 class="panel-title">Application Configuration</h2>
+      <form id="configForm">
+        <div class="form-group">
+          <label for="workerName">Your Name</label>
+          <input type="text" id="workerName" name="workerName" value="John Doe" required>
+        </div>
+
+        <div class="form-group">
+          <label for="workerEmail">Your Email</label>
+          <input type="email" id="workerEmail" name="workerEmail" value="john.doe@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="managerName">Manager Name</label>
+          <input type="text" id="managerName" name="managerName" value="Jane Smith" required>
+        </div>
+
+        <div class="form-group">
+          <label for="managerEmail">Manager Email</label>
+          <input type="email" id="managerEmail" name="managerEmail" value="jane.smith@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="smtpServer">SMTP Server</label>
+          <input type="text" id="smtpServer" name="smtpServer" value="smtp.example.com" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn">Save Configuration</button>
+          <a href="index.html" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Don't include real configurations
+worker.conf
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
