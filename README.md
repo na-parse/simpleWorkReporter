@@ -1,4 +1,4 @@
-# nbWorkReporter
+# simpleWorkReporter
 
 Makes the daily work task/activity reporting process easier.
 
@@ -24,7 +24,7 @@ Configuration needs to be setup before the service can start.  Required elements
 
 #### Linux / Cron
 
-Use Cron
+Use Cron maybe
 
 #### Windows / Task Scheduler
 

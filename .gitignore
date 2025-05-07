@@ -1,6 +1,8 @@
 # Don't include real configurations
 worker.conf
 
+# Don't include the developer run file
+devrun.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
