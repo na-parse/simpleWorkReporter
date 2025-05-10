@@ -8,3 +8,7 @@ devrun.py
 __pycache__/
 *.py[cod]
 *$py.class
+
+
+# Ignore MacOS thumbnail caching
+.DS_Store
