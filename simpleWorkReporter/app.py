@@ -1,12 +1,21 @@
 #!/usr/bin/python3
 '''
-Stuff
+simpleWorkReporter - app.py
+--
+Primary application definition.  Defines the package's application as
+the SimpleWorkReporter() class to provide the top level application entry
+point and flow control.  
+
+Usage:
+    from simpleWorkReporter import SimpleWorkReporter
+    my_app = SimpleWorkReporter()
+    my_app.run()
 '''
 
 # Flask specific imports (maybe I should just import flask?
 from flask import Flask, render_template, request, flash, redirect, url_for
 from .config import LoadSwrSettings
-
+from .errors import *
 
 
 class SimpleWorkReporter():
@@ -35,9 +44,10 @@ class SimpleWorkReporter():
                 smtp = self.settings.smtp,
                 page_config=True
             )
+        
         @self.app.route('/update/config', methods=['POST'])
         def www_update_config():
-            result = self.settings.update_config(
+            result, message = self.settings.update_config(
                 service_port = request.form.get('servicePort'),
                 worker_name = request.form.get('workerName'),
                 worker_email = request.form.get('workerEmail'),
@@ -45,14 +55,28 @@ class SimpleWorkReporter():
                 manager_email = request.form.get('managerEmail'),
                 smtp = request.form.get('smtpServer')
             )
-            if result == "newServicePort":
-                # do something about restarting the server and redirecting the user
+            if result == self.settings.UpdateResult.NEW_SERVICE_PORT:
+                # Service Port has been updated -- Redirect to restart.html
+                # TODO #
+                ''' I need to setup a flask.flash message setup to report messages
+                    back to the user after submission, but I would also like to 
+                    come up with some way to detect globally that a new service_port
+                    was defined and always redirect the user to a 'restart.html'
+                    page until the app is restarted completely. '''
                 pass
-            elif result:
+            elif result == self.settings.UpdateResult.UPDATED:
                 # Worked normally, regular update message
-                flash('Configuration updated successfully.','success')
-            
-            return redirect(url_for('www_index'))
+                # TODO #
+                ''' Here the update worked normally and I'd like to set a flash message
+                    and redirect the user back to index.html '''
+                pass
+            elif result == self.settings.UpdateResult.FAILURE:
+                # Error - Set a flash message containing 'message' as an error
+                # TODO #
+                ''' Return to config page with the error message '''
+            else:
+                # Unexpected application state
+                raise swrInternalError()
         
         
         @self.app.route('/task/<id>')
