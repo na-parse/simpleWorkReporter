@@ -3,24 +3,144 @@ simpleWorkReporter - config.py
 --
 Configuration loader and associated management operations
 '''
-from . import settings
-from dataclasses import dataclass
+from . import defs
+from .devtools import vardump
+from .errors import *
+
+from pathlib import Path
 import os
-
-@dataclass
-class swrSettings:
-    service_port: int
-    worker_name: str
-    worker_email: str
-    manager_name: str
-    manager_email: str
-    smtp_relay: str
+from enum import Enum, auto
+from typing import Tuple, Optional
 
 
-def load_config_file() -> list:
+class LoadSwrSettings:
     ''' 
-    Searches for and tries to load the config file.
-    Returns the config file as a list of lines
+    simpleWorkReporter Configuration Structure
+    Init attempts to load configuration file 'worker.conf' from the subdirectory
+    of the package by default.
+    Specifying a specific config_file Path will load an alternative config file.
     '''
-    if 
 
+    class UpdateResult(Enum):
+        ''' Enums used for handling configuration update result handling '''
+        UPDATED = auto()
+        NEW_SERVICE_PORT = auto()
+        FAILURE = auto()
+    
+    def __init__(self, config_file: Path = None):
+        config_values = self._load_config(config_file)
+        try:
+            self.service_port = config_values['port']
+            self.worker_name = config_values['worker_name']
+            self.worker_email = config_values['worker_email']
+            self.manager_name = config_values['manager_name']
+            self.manager_email = config_values['manager_email']
+            self.smtp = config_values['smtp']
+            self.config_file = config_values['config_file']
+        except KeyError as e:
+            msg = f'Configuration missing required value: \'{str(e.args[0]).upper()}\''
+            raise swrConfigError(msg) from None
+
+    def __repr__(self):
+        return f'LoadSwrSettings(config_file={self.config_file!r})'
+    
+    def __str__(self):
+        return (
+            f'LoadSwrSettings(service_port={self.service_port!r}, '
+            f'worker_name={self.worker_name!r}, worker_email={self.worker_email!r}, '
+            f'manager_name={self.manager_name!r}, manager_email={self.manager_email!r}, '
+            f'smtp={self.smtp!r}, config_file={self.config_file!r})'
+        )
+    
+    def update_config(self, 
+        service_port: int, worker_name: str, worker_email: str,
+        manager_name: str, manager_email: str, smtp: str
+    ) -> str:
+        ''' 
+        Updates configuration file by loading the raw content of the current 
+        config file, and updating the respective lines for each setting, 
+        saving the file, and then re-loading the __init__ function to update
+        application state with the new config.
+        '''
+        config_lines = self._load_config_lines(self.config_file)
+        for line in config_lines:
+            ''' Check if a key exists in line using _is_config_key() '''
+            ''' Update line with appropriate new value '''
+            ''' Overwrite config file with lines if any updates occurred '''
+        return self.UpdateResult.UPDATED, 'success'
+    
+    def _is_config_key(self, key: str, line: str) -> bool:
+        ''' doing some stuff to verify a config key in line '''
+        pass
+
+
+
+    def _load_config_lines(self, config_file: Path) -> list:
+        '''
+        Load the raw configuration file line data. Returns a list of lines.
+        '''
+        try:
+            with open(config_file,'r') as f:
+                lines = [ line.strip() for line in f.readlines() ]
+        except Exception as e:
+            raise swrConfigError(
+                f'Encountered error while reading configuration file: '
+                f'{config_file}\n - {e.__name__} {e}'
+            )
+        return lines
+
+
+    def _parse_config_lines(self, conf_lines: list) -> dict:
+        ''' 
+        Accepts config file lines and returns a key/value dict
+        Empty lines or lines starting with # are skipped
+        Any lines containing data without an '=' will raise a config error
+        Settings are assigned as key = value pairs, with key forced to lowercase
+        '''
+        settings = {}
+        bad_lines = {}
+        for line_num, line in enumerate(conf_lines,1):
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                key, value = line.split('=',1)
+                settings[key.strip().lower()] = value.strip()
+                continue
+            # If we get here, there's some weird garbage in the config
+            bad_lines[line_num] = line
+        
+        # Error check for bad data
+        if bad_lines:
+            print(f'ERROR: Invalid/Corrupt data in configuration.\n---\n')
+            for bad_line in bad_lines: 
+                print(f'[{str(bad_line).rjust(3)}]: {bad_lines[bad_line]}')
+            raise swrConfigError('Invalid configuration data')
+
+        return settings
+
+    def _load_config(self, config_file: Path = None) -> dict:
+        ''' 
+        Load the configuration file data and return the parsed structure
+        '''
+        # Setup the config_file path using defaults if none specified
+        if not config_file:
+            config_file = defs.CONFIG_FILE_PATH
+        if not os.path.isfile(config_file):
+            raise swrConfigError(f'Unable to find configuration file: {config_file}')
+        
+        # Load the raw line data from the config file and do a basic sanity check
+        config_lines = self._load_config_lines(config_file)
+        if (
+            not config_lines 
+            or len(config_lines) < len(defs.REQUIRED_CONF_VALUES)
+        ):
+            raise swrConfigError(
+                f'Incomplete or incorrect file format while reading '
+                f'config file: {config_file}'
+            )
+
+        # Run the lines through the settings parser
+        settings = self._parse_config_lines(config_lines)
+        # Append the config file path used for all this as well
+        settings['config_file'] = str(config_file)
+        return settings
