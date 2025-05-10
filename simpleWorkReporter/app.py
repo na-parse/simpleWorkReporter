@@ -57,6 +57,7 @@ class SimpleWorkReporter():
             )
             if result == self.settings.UpdateResult.NEW_SERVICE_PORT:
                 # Service Port has been updated -- Redirect to restart.html
+                self.new_service_port = True
                 # TODO #
                 ''' I need to setup a flask.flash message setup to report messages
                     back to the user after submission, but I would also like to 
