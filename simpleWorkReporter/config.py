@@ -55,24 +55,66 @@ class LoadSwrSettings:
     def update_config(self, 
         service_port: int, worker_name: str, worker_email: str,
         manager_name: str, manager_email: str, smtp: str
-    ) -> str:
+    ) -> Tuple['LoadSwrSettings.UpdateResult', Optional[str]]:
         ''' 
         Updates configuration file by loading the raw content of the current 
         config file, and updating the respective lines for each setting, 
         saving the file, and then re-loading the __init__ function to update
         application state with the new config.
         '''
+        # Loading the passed values to conf file key structure
+        settings = {
+            'Port': service_port,
+            'Worker_Name': worker_name,
+            'Worker_Email': worker_email,
+            'Manager_Name': manager_name,
+            'Manager_Email': manager_email,
+            'SMTP': smtp
+        }
         config_lines = self._load_config_lines(self.config_file)
-        for line in config_lines:
-            ''' Check if a key exists in line using _is_config_key() '''
-            ''' Update line with appropriate new value '''
-            ''' Overwrite config file with lines if any updates occurred '''
-        return self.UpdateResult.UPDATED, 'success'
-    
-    def _is_config_key(self, key: str, line: str) -> bool:
-        ''' doing some stuff to verify a config key in line '''
-        pass
+        updated_config_lines = []
 
+        for line in config_lines:
+            is_match, key_literal = self._is_config_key(line,settings)
+            if is_match:
+                # Update the line with the new key/value pair
+                line = f'{key_literal} = {settings[key_literal]}'
+            updated_config_lines.append(line)
+        
+        # Check if the service port is being updated
+        new_service_port = not settings['Port'] == self.settings.service_port
+
+        try:
+            with open(self.config_file,'w') as f:
+                _ = f.write('\n'.join(config_lines) + '\n')
+            # Reload settings from updated file
+            self._load_config()
+            if new_service_port:
+                return (self.UpdateResult.NEW_SERVICE_PORT, None)
+            else:
+                return (self.UpdateResult.UPDATED, None)
+        except Exception:
+            error_message = (
+                f'Configuration update to {self.config_file} failed -- '
+                f'{e.__name__} - {str(e)}'
+            )               
+            return (self.UpdateResult.FAILURE, error_message)
+        
+        # Shouldn't get here, raise an internal error for debugging purposes
+        raise swrInternalError()
+
+
+    def _is_config_key(self, line: str, settings: dict) -> bool:
+        ''' 
+        Parses line for a configuration key and returns
+        a tuple of bool, config_key_literal or None depending on match status
+        '''
+        result = self._parse_config_lines([line])
+        if result:
+            for config_key in settings:
+                if list(result.keys())[0].lower() == config_key.lower():
+                    return True, config_key
+        return False, None
 
 
     def _load_config_lines(self, config_file: Path) -> list:
@@ -88,7 +130,6 @@ class LoadSwrSettings:
                 f'{config_file}\n - {e.__name__} {e}'
             )
         return lines
-
 
     def _parse_config_lines(self, conf_lines: list) -> dict:
         ''' 
