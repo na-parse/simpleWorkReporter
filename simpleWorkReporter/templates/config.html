@@ -6,32 +6,32 @@
       <form id="configForm" action="/update/config" method="post">
         <div class="form-group">
           <label for="workerName">Your Name</label>
-          <input type="text" id="workerName" name="workerName" value="{{worker_name}}" required>
+          <input type="text" id="workerName" name="workerName" value="{{settings['worker_name']}}" required>
         </div>
 
         <div class="form-group">
           <label for="workerEmail">Your Email</label>
-          <input type="email" id="workerEmail" name="workerEmail" value="{{worker_email}}" required>
+          <input type="email" id="workerEmail" name="workerEmail" value="{{settings['worker_email']}}" required>
         </div>
 
         <div class="form-group">
           <label for="managerName">Manager Name</label>
-          <input type="text" id="managerName" name="managerName" value="{{manager_name}}" required>
+          <input type="text" id="managerName" name="managerName" value="{{settings['manager_name']}}" required>
         </div>
 
         <div class="form-group">
           <label for="managerEmail">Manager Email</label>
-          <input type="email" id="managerEmail" name="managerEmail" value="{{manager_email}}" required>
+          <input type="email" id="managerEmail" name="managerEmail" value="{{settings['manager_email']}}" required>
         </div>
 
         <div class="form-group">
           <label for="smtpServer">SMTP Server</label>
-          <input type="text" id="smtpServer" name="smtpServer" value="{{smtp}}" required>
+          <input type="text" id="smtpServer" name="smtpServer" value="{{settings['smtp']}}" required>
         </div>
         
         <div class="form-group">
           <label for="servicePort">Web Service Port</label>
-          <input type="text" id="servicePort" name="servicePort" value="{{service_port}}" required>
+          <input type="text" id="servicePort" name="servicePort" value="{{settings['service_port']}}" required>
         </div>
 
         <div class="form-actions">

@@ -4,8 +4,10 @@ simpleWorkReporter - config.py
 Configuration loader and associated management operations
 '''
 from . import defs
+from . import syslog
 from .devtools import vardump
 from .errors import *
+
 
 from pathlib import Path
 import os
@@ -18,7 +20,7 @@ class LoadSwrSettings:
     simpleWorkReporter Configuration Structure
     Init attempts to load configuration file 'worker.conf' from the subdirectory
     of the package by default.
-    Specifying a specific config_file Path will load an alternative config file.
+    Specifying a specific config_path Path will load an alternative config file.
     '''
 
     class UpdateResult(Enum):
@@ -27,8 +29,8 @@ class LoadSwrSettings:
         NEW_SERVICE_PORT = auto()
         FAILURE = auto()
     
-    def __init__(self, config_file: Path = None):
-        config_values = self._load_config(config_file)
+    def __init__(self, config_path: Path = None):
+        config_values = self._load_config(config_path)
         try:
             self.service_port = config_values['port']
             self.worker_name = config_values['worker_name']
@@ -36,22 +38,33 @@ class LoadSwrSettings:
             self.manager_name = config_values['manager_name']
             self.manager_email = config_values['manager_email']
             self.smtp = config_values['smtp']
-            self.config_file = config_values['config_file']
+            self.config_path = config_values['config_path']
+            syslog.msg(f'Loaded configuration values:\n{syslog.jdump(dict(self))}')
         except KeyError as e:
             msg = f'Configuration missing required value: \'{str(e.args[0]).upper()}\''
             raise swrConfigError(msg) from None
 
     def __repr__(self):
-        return f'LoadSwrSettings(config_file={self.config_file!r})'
+        return f'LoadSwrSettings(config_path={self.config_path!r})'
     
     def __str__(self):
         return (
             f'LoadSwrSettings(service_port={self.service_port!r}, '
             f'worker_name={self.worker_name!r}, worker_email={self.worker_email!r}, '
             f'manager_name={self.manager_name!r}, manager_email={self.manager_email!r}, '
-            f'smtp={self.smtp!r}, config_file={self.config_file!r})'
+            f'smtp={self.smtp!r}, config_path={self.config_path!r})'
         )
     
+    def __iter__(self):
+        yield ("service_port", self.service_port)
+        yield ("worker_name", self.worker_name)
+        yield ("worker_email", self.worker_email)
+        yield ("manager_name", self.manager_name)
+        yield ("manager_email", self.manager_email)
+        yield ("smtp", self.smtp)
+        yield ("config_path", self.config_path)
+        
+
     def update_config(self, 
         service_port: int, worker_name: str, worker_email: str,
         manager_name: str, manager_email: str, smtp: str
@@ -71,7 +84,8 @@ class LoadSwrSettings:
             'Manager_Email': manager_email,
             'SMTP': smtp
         }
-        config_lines = self._load_config_lines(self.config_file)
+
+        config_lines = self._load_config_lines(self.config_path)
         updated_config_lines = []
 
         for line in config_lines:
@@ -80,24 +94,29 @@ class LoadSwrSettings:
                 # Update the line with the new key/value pair
                 line = f'{key_literal} = {settings[key_literal]}'
             updated_config_lines.append(line)
-        
+
         # Check if the service port is being updated
-        new_service_port = not settings['Port'] == self.settings.service_port
+        new_service_port = not settings['Port'] == self.service_port
 
         try:
-            with open(self.config_file,'w') as f:
-                _ = f.write('\n'.join(config_lines) + '\n')
+            with open(self.config_path,'w') as f:
+                bytes_written = f.write('\n'.join(updated_config_lines) + '\n')
+                syslog.dbg(
+                    f'Configuration updates written to {self.config_path} '
+                    f'({bytes_written} bytes)'
+                )
             # Reload settings from updated file
-            self._load_config()
+            self.__init__()
             if new_service_port:
                 return (self.UpdateResult.NEW_SERVICE_PORT, None)
             else:
                 return (self.UpdateResult.UPDATED, None)
         except Exception:
             error_message = (
-                f'Configuration update to {self.config_file} failed -- '
+                f'Configuration update to {self.config_path} failed -- '
                 f'{e.__name__} - {str(e)}'
-            )               
+            )
+            syslog.dbg(error_message)
             return (self.UpdateResult.FAILURE, error_message)
         
         # Shouldn't get here, raise an internal error for debugging purposes
@@ -117,17 +136,17 @@ class LoadSwrSettings:
         return False, None
 
 
-    def _load_config_lines(self, config_file: Path) -> list:
+    def _load_config_lines(self, config_path: Path) -> list:
         '''
         Load the raw configuration file line data. Returns a list of lines.
         '''
         try:
-            with open(config_file,'r') as f:
+            with open(config_path,'r') as f:
                 lines = [ line.strip() for line in f.readlines() ]
         except Exception as e:
             raise swrConfigError(
                 f'Encountered error while reading configuration file: '
-                f'{config_file}\n - {e.__name__} {e}'
+                f'{config_path}\n - {e.__name__} {e}'
             )
         return lines
 
@@ -159,29 +178,29 @@ class LoadSwrSettings:
 
         return settings
 
-    def _load_config(self, config_file: Path = None) -> dict:
+    def _load_config(self, config_path: Path = None) -> dict:
         ''' 
         Load the configuration file data and return the parsed structure
         '''
-        # Setup the config_file path using defaults if none specified
-        if not config_file:
-            config_file = defs.CONFIG_FILE_PATH
-        if not os.path.isfile(config_file):
-            raise swrConfigError(f'Unable to find configuration file: {config_file}')
+        # Setup the config_path path using defaults if none specified
+        if not config_path:
+            config_path = defs.CONFIG_FILE_PATH
+        if not os.path.isfile(config_path):
+            raise swrConfigError(f'Unable to find configuration file: {config_path}')
         
         # Load the raw line data from the config file and do a basic sanity check
-        config_lines = self._load_config_lines(config_file)
+        config_lines = self._load_config_lines(config_path)
         if (
             not config_lines 
             or len(config_lines) < len(defs.REQUIRED_CONF_VALUES)
         ):
             raise swrConfigError(
                 f'Incomplete or incorrect file format while reading '
-                f'config file: {config_file}'
+                f'config file: {config_path}'
             )
 
         # Run the lines through the settings parser
         settings = self._parse_config_lines(config_lines)
         # Append the config file path used for all this as well
-        settings['config_file'] = str(config_file)
+        settings['config_path'] = str(config_path)
         return settings

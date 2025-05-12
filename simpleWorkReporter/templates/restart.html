@@ -1,0 +1,13 @@
+{% include '_header.html' %}
+
+<div class="container">
+  <div class="restart-container">
+    <h2 class="restart-title">Service Restart Required</h2>
+    <p class="restart-message">A restart is required due to the new server port configuration.</p>
+    <p class="restart-message">After restart, the service will be available at: 
+      <a href="{{new_url}}" class="restart-port">{{new_url}}</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>

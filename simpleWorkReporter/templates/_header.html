@@ -14,7 +14,10 @@
         <h1 class="app-title">simpleWorkReporter</h1>
         <div class="header-actions">
           {% if page_index %}
-          <span class="config-summary">John Doe (john.doe@example.com) → Jane Smith (jane.smith@example.com)</span>
+          <span class="config-summary">
+            {{settings['worker_name']}} ({{settings['worker_email']}})
+              → 
+            {{settings['manager_name']}} ({{settings['manager_email']}})</span>
           <a href="/send" class="header-btn send-butn">Send Daily Report</a>
           <a href="/config" class="header-btn config-btn">Edit Config</a>
           {% endif %}
@@ -22,7 +25,16 @@
           <a href="/" class="header-btn">Back to Main Page</a>
           {% endif %}
         </div>
-        </div>
       </div>
     </div>
   </header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container flash-container">
+      {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

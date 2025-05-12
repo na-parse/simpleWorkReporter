@@ -6,7 +6,8 @@
       <!-- Entry Form Panel -->
       <div class="entry-panel">
         <h2 class="panel-title">What Did You Do?</h2>
-        <form id="newItemForm">
+        <form id="newItemForm" action="/submit/task" method="post">
+          <input type="hidden" id="newTask" name="newTask" value="newTask">
           <div class="form-row">
             <div class="form-group">
               <label for="taskType">Task Type</label>
@@ -14,8 +15,8 @@
             </div>
 
             <div class="form-group">
-              <label for="subType">Sub Type / Ticket #</label>
-              <input type="text" id="subType" name="subType" placeholder="e.g., 9995832" required>
+              <label for="taskSubType">Sub Type / Ticket #</label>
+              <input type="text" id="taskSubType" name="taskSubType" placeholder="e.g., 9995832" required>
             </div>
           </div>
 
@@ -51,66 +52,17 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="clickable-row" data-href="item.html?id=1">
-              <td>05/03/2025</td>
-              <td>Meeting</td>
-              <td>Weekly Team</td>
-              <td>Discussed project timelines and resource allocation for Q2</td>
+            {% for task in tasks %}
+            <tr class="clickable-row">
+              <td>
+                <a class="date-link" href="/task/{{ task.id }}" 
+                  title="Edit Task {{ task.id }}">{{ task.date }}</a>
+              </td>
+              <td>{{ task.taskType }}</td>
+              <td>{{ task.taskSubType }}</td>
+              <td>{{ task.description }}</td>
             </tr>
-            <tr class="clickable-row" data-href="item.html?id=2">
-              <td>05/03/2025</td>
-              <td>Storage</td>
-              <td>DevOps</td>
-              <td>Updates pushed for sdcStorageLibrary/nxapimgr to better handle edge case server 500 responses from the API end points.  Added documentation to billing codebase for easier operator deploy and install.</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=3">
-              <td>05/02/2025</td>
-              <td>SR</td>
-              <td>9995832</td>
-              <td>(Standard Request) Storage Allocation Request to ESX/Windows Virtual Infrastructure (customer: John Doeversonville ODOT)</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=4">
-              <td>05/02/2025</td>
-              <td>Change</td>
-              <td>CHG45678</td>
-              <td>Updated server configurations for improved performance</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=5">
-              <td>05/02/2025</td>
-              <td>Problem</td>
-              <td>PRB12345</td>
-              <td>Investigated network latency issues affecting east coast data center</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=6">
-              <td>05/01/2025</td>
-              <td>Meeting</td>
-              <td>Project Kickoff</td>
-              <td>Initial planning meeting for Q3 infrastructure upgrade project</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=7">
-              <td>05/01/2025</td>
-              <td>SR</td>
-              <td>9995833</td>
-              <td>User account provisioning for new marketing team members</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=8">
-              <td>05/01/2025</td>
-              <td>Training</td>
-              <td>Security</td>
-              <td>Completed required annual security awareness training</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=9">
-              <td>04/30/2025</td>
-              <td>Documentation</td>
-              <td>Procedures</td>
-              <td>Updated disaster recovery procedures for new cloud infrastructure</td>
-            </tr>
-            <tr class="clickable-row" data-href="item.html?id=10">
-              <td>04/30/2025</td>
-              <td>SR</td>
-              <td>9995834</td>
-              <td>Resolved printer configuration issues for finance department</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
@@ -127,14 +79,14 @@
       }
     });
     
-    document.addEventListener('DOMContentLoaded', function() {
-      const rows = document.querySelectorAll('.clickable-row');
-      rows.forEach(row => {
-        row.addEventListener('click', function() {
-          window.location.href = this.dataset.href;
-        });
-      });
-    });;
+    // document.addEventListener('DOMContentLoaded', function() {
+    //   const rows = document.querySelectorAll('.clickable-row');
+    //   rows.forEach(row => {
+    //     row.addEventListener('click', function() {
+    //       window.location.href = this.dataset.href;
+    //     });
+    //   });
+    // });;
 
     
   </script>
