@@ -11,6 +11,7 @@ from .errors import *
 
 from pathlib import Path
 import os
+import hashlib
 from enum import Enum, auto
 from typing import Tuple, Optional
 
@@ -38,6 +39,7 @@ class LoadSwrSettings:
             self.manager_name = config_values['manager_name']
             self.manager_email = config_values['manager_email']
             self.smtp = config_values['smtp']
+            self.access = config_values.get('access','')
             self.config_path = config_values['config_path']
             syslog.msg(f'Loaded configuration values:\n{syslog.jdump(dict(self))}')
         except KeyError as e:
@@ -52,7 +54,7 @@ class LoadSwrSettings:
             f'LoadSwrSettings(service_port={self.service_port!r}, '
             f'worker_name={self.worker_name!r}, worker_email={self.worker_email!r}, '
             f'manager_name={self.manager_name!r}, manager_email={self.manager_email!r}, '
-            f'smtp={self.smtp!r}, config_path={self.config_path!r})'
+            f'smtp={self.smtp!r}, access={self.access!r}, config_path={self.config_path!r})'
         )
     
     def __iter__(self):
@@ -62,12 +64,22 @@ class LoadSwrSettings:
         yield ("manager_name", self.manager_name)
         yield ("manager_email", self.manager_email)
         yield ("smtp", self.smtp)
+        yield ("access", self.access)
         yield ("config_path", self.config_path)
-        
+    
+    def _hash_password(password: str, encode_method: str = 'utf-8') -> str:
+        '''
+        Returns a SHA256 hexdigest hash of the supplied password
+        '''
+        sha256 = hashlib.sha256()
+        sha256.update(password.encode(encode_method))
+        return sha256.hexdigest()
+
+
 
     def update_config(self, 
         service_port: int, worker_name: str, worker_email: str,
-        manager_name: str, manager_email: str, smtp: str
+        manager_name: str, manager_email: str, smtp: str, access: str = ''
     ) -> Tuple['LoadSwrSettings.UpdateResult', Optional[str]]:
         ''' 
         Updates configuration file by loading the raw content of the current 
@@ -75,6 +87,9 @@ class LoadSwrSettings:
         saving the file, and then re-loading the __init__ function to update
         application state with the new config.
         '''
+        # Convert access to a hash if it was set
+        if access: access = self._hash_password(access)
+
         # Loading the passed values to conf file key structure
         settings = {
             'Port': service_port,
@@ -82,7 +97,8 @@ class LoadSwrSettings:
             'Worker_Email': worker_email,
             'Manager_Name': manager_name,
             'Manager_Email': manager_email,
-            'SMTP': smtp
+            'SMTP': smtp,
+            'Access': access
         }
 
         config_lines = self._load_config_lines(self.config_path)
@@ -177,6 +193,7 @@ class LoadSwrSettings:
             raise swrConfigError('Invalid configuration data')
 
         return settings
+
 
     def _load_config(self, config_path: Path = None) -> dict:
         ''' 

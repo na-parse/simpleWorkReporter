@@ -29,8 +29,9 @@ class swrInternalError(Exception):
 
 class NotImplemented(Exception):
     ''' Stub to insert for functions that have not been implemented yet '''
-    def __init__(self):
+    def __init__(self, extra_message: str = None):
         self.message = f'Feature not implemented yet.'
+        self.message += extra_message if extra_message is not None else ''
         self.state = f'error'
         super().__init__(self.message)
     

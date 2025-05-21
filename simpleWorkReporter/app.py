@@ -13,7 +13,15 @@ Usage:
 '''
 
 # Flask specific imports (maybe I should just import flask?
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import (
+    Flask, 
+    render_template, 
+    request, 
+    flash, 
+    redirect, 
+    url_for,
+    session
+)
 from urllib.parse import urlparse, urlunparse
 from pathlib import Path
 from datetime import datetime
@@ -125,7 +133,7 @@ class SimpleWorkReporter():
                     f' Unable to process.','error'
                 )
                 return redirect(url_for('www_index'))
-            
+
             if is_new:
                 result, message = self.task_db.add_task(
                     taskType, taskSubType, description, date
@@ -134,9 +142,11 @@ class SimpleWorkReporter():
                     flash(f'New task submission failed: {message}','error')
                 else:
                     flash(f'New task submitted successfully: {message}','success')
-                return redirect(url_for('www_index'))
             elif is_delete:
-                raise NotImplemented(f'Deleted Task ID: {taskId}')        
+                if self.task_db.delete_task(taskId):
+                    flash(f'Successfully deleted task {taskId}','success')
+                else:
+                    flash(f'An issue occrred while deleting task {taskId}','warning')  
             else:
                 # Edit Existing Task
                 result, message = self.task_db.edit_task(
@@ -144,18 +154,23 @@ class SimpleWorkReporter():
                 )
                 if not result:
                     flash(f'Task edit failed: {message}','error')
-                    return redirect(f'/task/{taskId}')
                 else:
                     flash(f'Task {taskId} successfully updated.','success')
-                    return redirect(url_for('www_index'))        
 
+            # Send back to home page regardless of outcome
+            return redirect(url_for('www_index'))
 
         @self.app.route('/send')
         def www_send_report():
             ''' 
             Email the report - Confirmation and interactive window
             '''
-            return "Are you sure you want to send?"
+            page_title = "Send Daily Report"
+            return render_template('send.html',
+                page_title=page_title,
+                settings=dict(self.settings)
+            )
+
         
         @self.app.route('/send/y')
         def www_send_report_confirmed():
@@ -183,7 +198,9 @@ class SimpleWorkReporter():
 
         # Add before_request handler for global port change detection
         @self.app.before_request
-        def is_port_change_pending():
+        def before_requests_handler():
+
+            # Server Restart Required Redirect
             if (
                 self.new_service_port 
                 and request.endpoint != 'www_restart' 
@@ -191,6 +208,15 @@ class SimpleWorkReporter():
             ):
                 # If port change is pending and user is not already on restart page, redirect
                 return redirect(url_for('www_restart'))
+            
+            # Authentication check and redirect
+            if (
+                request.endpoint not in defs.ALLOWED_ENDPOINTS_WITHOUT_AUTH and
+                not request.path.startswith('/static/') and
+                not session.get('authenticated')
+            ):
+                flash('Authentication required. Please log in.', 'warning')
+                return redirect(url_for('www_login', next=request.url))
     
     def run(self):
         self.app.run(host='0.0.0.0', port=self.settings.service_port,debug=True)

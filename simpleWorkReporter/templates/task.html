@@ -8,6 +8,7 @@
         {% if delete_confirm %}
           <div class="delete-container">
             <p class="delete-message">Confirm deletion of the following task:</p>
+            <input type="hidden" id="deleteTask" name="deleteTask" value="confirmed">
           </div>
         {% endif %}
         
@@ -34,15 +35,17 @@
         </div>
 
         <div class="form-actions">
-          {% if not delete_confirm %}
-            <button type="submit" class="btn">Save Changes</button>
-          {% endif %}
-          <a href="/" class="btn btn-secondary">Cancel</a>
-          {% if not delete_confirm %}
-            <a href="/task/delete/{{task.id}}" class="btn btn-danger">Delete Item</a>
-          {% else %}
+          {% if delete_confirm %}
             <button type="submit" class="btn btn-danger">Confirm Delete</button>
+          {% else %}
+            <a href="/task/delete/{{task.id}}" class="btn btn-danger">Delete Item</a>
           {% endif %}
+          <div style="margin-left: auto; display: flex; gap: 8px;">
+            <a href="/" class="btn btn-secondary">Cancel</a>
+            {% if not delete_confirm %}
+              <button type="submit" class="btn">Save Changes</button>            
+            {% endif %}
+          </div>
         </div>
       </form>
     </div>

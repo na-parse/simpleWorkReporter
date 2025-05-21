@@ -232,9 +232,11 @@ textarea {
   margin-top: 15px;
 }
 
+/* 
 .form-actions .btn-danger {
   margin-left: auto;
 }
+*/
 
 .config-form {
   max-width: 600px;
@@ -276,15 +278,17 @@ textarea {
 }
 
 .flash-message {
-  padding: 10px 15px;
+  padding: 10px 15px 10px 40px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 8px;
+  position: relative; /* For positioning the close button */
+  transition: opacity 0.5s ease; /* For fade-out animation */
 }
 
 .flash-success {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #78b9e5;
+  color: #222222;
   border: 1px solid #c3e6cb;
 }
 
@@ -304,6 +308,21 @@ textarea {
   background-color: #d1ecf1;
   color: #0c5460;
   border: 1px solid #bee5eb;
+}
+
+.flash-close {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.flash-close:hover {
+  opacity: 1;
 }
 
 /* Restart Page Styling */

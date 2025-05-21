@@ -55,4 +55,44 @@ REQUIRED_CONF_VALUES = [
     'manager_email',
     'smtp']
 
+# Endpoint routes allowed without authentication
+ALLOWED_ENDPOINTS_WITHOUT_AUTH = ['www_login', 'www_logout', 'www_restart', 'www_setauth']
 
+# Builder for sample-worker.conf
+SAMPLE_WORKER_CONF = '''\
+# Sample Configuration File for the simpleWorkReporter service
+
+# Port defines the TCP Port to listen on - Will use 10555 by default
+Port = %service_port%
+
+# Worker_Name and Worker_Email define the user tracking work.  Worker_Email 
+#  is added as a recipient for Work Report emails.
+Worker_Name = %worker_name%
+Worker_Email = %worker_email%
+
+# Manager_Name and Manager_Email define the primary recipient of the report
+Manager_Name = %manager_name%
+Manager_Email = %manager_email%
+
+# SMTP identifies the SMTP server to use when sending these reports.
+#  NOTE: Current version only supports non-TLS port 25 SMTP
+#  Future expansions will add support for TLS authenticated services.
+SMTP = %smtp%
+'''
+SAMPLE_WORKER_CONF_VALUES = {
+    'service_port': DEFAULT_SERVICE_PORT,
+    'worker_name': 'Worker Name',
+    'worker_email': 'worker@example.com',
+    'manager_name': 'Manager Name',
+    'manager_email': 'Manager Email',
+    'smtp': 'smtp.example.com',
+}
+
+# Access note for conf updates
+WORKER_CONF_ACCESS = '''\
+# Access key is an SHA256 hash of the password used to secure the app.
+# The key is set manually during setup or first access, do not edit
+# this value manually.  This section can be removed and the application
+# restarted to reset the key.
+ACCESS = %access%
+'''

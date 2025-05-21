@@ -45,13 +45,18 @@
         <table class="work-items-table">
           <thead>
             <tr>
-              <th width="10%">Date</th>
+              <th width="8%">Date</th>
               <th width="10%">Task Type</th>
-              <th width="15%">Sub Type</th>
+              <th width="10%">Sub Type</th>
               <th>Description</th>
             </tr>
           </thead>
           <tbody>
+            {% if not task %}
+            <tr class="clickable-row">
+              <td colspan=4>No unsent records...</td>
+            </tr>
+            {% endif %}
             {% for task in tasks %}
             <tr class="clickable-row">
               <td>

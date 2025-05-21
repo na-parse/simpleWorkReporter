@@ -29,12 +29,49 @@
     </div>
   </header>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="container flash-container">
-      {% for category, message in messages %}
-        <div class="flash-message flash-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container flash-container">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}" id="flash-{{ loop.index }}">
+            {{ message }}
+            <span class="flash-close" onclick="dismissFlash('flash-{{ loop.index }}')">&times;</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <script>
+    // Javascript via Claude 3.7 Sonnet because I don't know Javascript at all
+    // Function to dismiss a flash message
+    function dismissFlash(id) {
+      var msg = document.getElementById(id);
+      msg.style.display = 'none';
+
+      // Check if any visible flash messages remain
+      var container = msg.parentElement;
+      var visible = container.querySelectorAll('.flash-message:not([style*="display: none"])');
+      if (visible.length === 0) {
+        container.style.display = 'none';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        setTimeout(function() {
+          message.style.opacity = '0';
+          setTimeout(function() {
+            message.style.display = 'none';
+            // Hide container if no visible messages remain
+            var container = message.parentElement;
+            var visible = container.querySelectorAll('.flash-message:not([style*="display: none"])');
+            if (visible.length === 0) {
+              container.style.display = 'none';
+            }
+          }, 500);
+        }, 20000);
+      });
+    });
+  </script>
