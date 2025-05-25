@@ -7,6 +7,13 @@ body {
   line-height: 1.4;
 }
 
+p code {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
 .container {
   width: 98%;
   max-width: 1780px;

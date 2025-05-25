@@ -1,7 +1,7 @@
 {% include "_header.html" %}
 
   <div class="container">
-    <div class="config-form">
+    <div class="restart-container">
       <h2 class="panel-title">Application Configuration</h2>
       <form id="configForm" action="/update/config" method="post">
         <div class="form-group">
@@ -38,6 +38,9 @@
           <button type="submit" class="btn">Save Configuration</button>
           <a href="index.html" class="btn btn-secondary">Cancel</a>
         </div>
+      <p class="restart-message">
+      Note that the access passphrase can only be modified using the <code>setupSession.py</code> script.
+      </p>
       </form>
     </div>
   </div>

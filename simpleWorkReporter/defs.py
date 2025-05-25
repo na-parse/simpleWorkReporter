@@ -6,6 +6,7 @@ to avoid hard coding elements across multiple files.
 '''
 from pathlib import Path
 import os
+import random
 
 # Package Name
 PACKAGE_NAME = "simpleWorkReporter"
@@ -46,53 +47,59 @@ TASKDB_TABLESQL = f'''
     );
 '''
 
-# Required CONF_FILE keys for simpleWorkReporter configuration
-REQUIRED_CONF_VALUES = [
-    'service_port',
-    'worker_name',
-    'worker_email',
-    'manager_name',
-    'manager_email',
-    'smtp']
-
 # Endpoint routes allowed without authentication
-ALLOWED_ENDPOINTS_WITHOUT_AUTH = ['www_login', 'www_logout', 'www_restart', 'www_setauth']
+ALLOWED_ENDPOINTS_WITHOUT_AUTH = ['www_login', 'www_logout', 'www_restart']
 
-# Builder for sample-worker.conf
-SAMPLE_WORKER_CONF = '''\
-# Sample Configuration File for the simpleWorkReporter service
 
-# Port defines the TCP Port to listen on - Will use 10555 by default
-Port = %service_port%
-
-# Worker_Name and Worker_Email define the user tracking work.  Worker_Email 
-#  is added as a recipient for Work Report emails.
-Worker_Name = %worker_name%
-Worker_Email = %worker_email%
-
-# Manager_Name and Manager_Email define the primary recipient of the report
-Manager_Name = %manager_name%
-Manager_Email = %manager_email%
-
-# SMTP identifies the SMTP server to use when sending these reports.
-#  NOTE: Current version only supports non-TLS port 25 SMTP
-#  Future expansions will add support for TLS authenticated services.
-SMTP = %smtp%
-'''
-SAMPLE_WORKER_CONF_VALUES = {
-    'service_port': DEFAULT_SERVICE_PORT,
-    'worker_name': 'Worker Name',
-    'worker_email': 'worker@example.com',
-    'manager_name': 'Manager Name',
-    'manager_email': 'Manager Email',
-    'smtp': 'smtp.example.com',
+# Required CONF_FILE keys for simpleWorkReporter configuration
+#   Primarily used for building new configuration via setup
+REQUIRED_CONF_VALUES = {
+    'Service_Port': {
+        'default': random.randrange(2000,20000),
+        'desc': [
+            'Service_Port defines the TCP port the webservice will listen on'
+        ]
+    },
+    'Worker_Name': {
+        'default': 'Example Worker',
+        'desc': [
+            'Worker_Name defines the name of the user tracking work events.',
+            '  Used when sending reports to the manager.'
+        ]
+    },
+    'Worker_Email': {
+        'default': 'worker-drone@example.com',
+        'desc': [
+            'Worker_Email defines email for user tracking work events. ',
+            '  Reports are sent from, and CCed to this address.'
+        ]
+    },
+    'Manager_Name': {
+        'default': 'Manager Name',
+        'desc': [
+            'Manager_Name defines name of primary recipient for reports. ',
+            '  Used to address the manager in the report body.'
+        ]
+    },
+    'Manager_Email': {
+        'default': 'manager@example.com',
+        'desc': [
+            'Manager_Email defines the primary recipient\'s email. ',
+            '  Reports are sent and addressed to this address.'
+        ]
+    },
+    'SMTP': {
+        'default': 'smtp.example.com',
+        'desc': [
+            'SMTP assigned the outgoing SMTP server to use for sending daily ',
+            '  reports.  Currently only non-TLS port 25 SMTP is supported.'
+        ]
+    },
+    'Access': {
+        'default': '',
+        'desc': [
+            'Access is a SHA256 key of a passphrase used to control access to the',
+            '  work reporter console.  Intended to prevent mild mischief, not secure portal.'
+        ]
+    }
 }
-
-# Access note for conf updates
-WORKER_CONF_ACCESS = '''\
-# Access key is an SHA256 hash of the password used to secure the app.
-# The key is set manually during setup or first access, do not edit
-# this value manually.  This section can be removed and the application
-# restarted to reset the key.
-ACCESS = %access%
-'''

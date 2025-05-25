@@ -45,6 +45,26 @@ class SimpleWorkReporter():
         self._set_routes()
     
     def _set_routes(self):
+        # Add before_request handler for global port change detection
+        @self.app.before_request
+        def before_requests_handler():
+            # Server Restart Required Redirect
+            if (
+                self.new_service_port 
+                and request.endpoint != 'www_restart' 
+                and not request.path.startswith('/static/')
+            ):
+                # If port change is pending and user is not already on restart page, redirect
+                return redirect(url_for('www_restart'))
+            # Authentication check and redirect
+            if (
+                request.endpoint not in defs.ALLOWED_ENDPOINTS_WITHOUT_AUTH and
+                not request.path.startswith('/static/') and
+                not session.get('authenticated')
+            ):
+                #flash('Authentication required. Please log in.', 'warning')
+                return redirect(url_for('www_login', next=request.url))
+        
         @self.app.route('/')
         def www_index():
             page_title = f"Daily Tasks"
@@ -103,6 +123,10 @@ class SimpleWorkReporter():
 
             page_title = f"{task_action} Task {id}"
             task = self.task_db.get_task(id)
+            if not task:
+                flash(f'Task ID {id} does not exist.','warning')
+                return redirect(url_for('www_index'))
+            
             return render_template(
                 'task.html', 
                 page_title=page_title, 
@@ -160,6 +184,7 @@ class SimpleWorkReporter():
             # Send back to home page regardless of outcome
             return redirect(url_for('www_index'))
 
+
         @self.app.route('/send')
         def www_send_report():
             ''' 
@@ -171,7 +196,32 @@ class SimpleWorkReporter():
                 settings=dict(self.settings)
             )
 
+        @self.app.route('/login', methods=['GET','POST'])
+        def www_login():
+            if request.method == "POST":
+                password = request.form.get('password','')
+                if self.settings.is_pass_valid(password):
+                    session['authenticated'] = True
+                    session.permanent = True # Use PERMANENT_SESSION_LIFETIME
+                    flash('Login successful.', 'success')
+                    next_url = request.args.get('next') or url_for('www_index')
+                    return redirect(next_url)
+                else:
+                    flash('Invalid password.', 'error')
+            return render_template('login.html', page_title="Login")                
+            
+            page_title = "Login"
+            return render_template('login.html',
+                page_title=page_title,
+                settings=dict(self.settings)
+            )
         
+        @self.app.route('/logout')
+        def www_logout():
+            session.pop('authenticated', None)
+            flash('You have been logged out.', 'info')
+            return redirect(url_for('www_login'))
+
         @self.app.route('/send/y')
         def www_send_report_confirmed():
             '''
@@ -196,38 +246,6 @@ class SimpleWorkReporter():
             new_port = self.settings.service_port
             return render_template('restart.html', page_title=page_title, new_url=new_url)
 
-        # Add before_request handler for global port change detection
-        @self.app.before_request
-        def before_requests_handler():
-
-            # Server Restart Required Redirect
-            if (
-                self.new_service_port 
-                and request.endpoint != 'www_restart' 
-                and not request.path.startswith('/static/')
-            ):
-                # If port change is pending and user is not already on restart page, redirect
-                return redirect(url_for('www_restart'))
-            
-            # Authentication check and redirect
-            if (
-                request.endpoint not in defs.ALLOWED_ENDPOINTS_WITHOUT_AUTH and
-                not request.path.startswith('/static/') and
-                not session.get('authenticated')
-            ):
-                flash('Authentication required. Please log in.', 'warning')
-                return redirect(url_for('www_login', next=request.url))
     
     def run(self):
         self.app.run(host='0.0.0.0', port=self.settings.service_port,debug=True)
-        
-
-
-
-# app = Flask(__name__)
-
-# @app.route("/")
-# def index():
-#   return render_template('index.html')
-
-# if __name__ == '__main__':
