@@ -11,8 +11,8 @@ import random
 # Package Name
 PACKAGE_NAME = "simpleWorkReporter"
 
-# Prompted during setup, otherwise configuration is required
-DEFAULT_SERVICE_PORT = 10555
+# DEBUG - Set to any value to enable debugging messages
+DEBUG = None
 
 # Tasks track by Timestamp but prefer Date-only display
 # Set a default time for non-current Day Date submissions

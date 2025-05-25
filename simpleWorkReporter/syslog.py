@@ -18,6 +18,7 @@ except ModuleNotFoundError: defs = None
 app_name = getattr(defs,'PACKAGE_NAME',DEFAULT_APP_NAME)
 log_file = getattr(defs,'DEFAULT_LOG_PATH',DEFAULT_LOG_PATH)
 console_only = bool(getattr(defs,'LOG_CONSOLE_ONLY',False))
+DEBUG = getattr(defs, 'DEBUG', False)
 
 ''' Initialize the logger '''
 syslog = logging.getLogger(app_name)
@@ -67,8 +68,12 @@ def disable_file_logging():
         _file_handler.close()
         _file_handler = None
 
+
 def jdump(thisObj,indent: int = 2):
     try: 
         return json.dumps(thisObj,indent=indent)
     except:
         return f'<object_not_JSON_serializable>'
+
+if not DEBUG:
+    syslog.disabled = True
