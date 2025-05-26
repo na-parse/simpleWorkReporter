@@ -137,7 +137,7 @@ class TaskDatabase():
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
                     f'INSERT INTO {self._table_name} '
-                    '(taskType, taskSubType, description, datetime, sent) '
+                    '(taskType, taskSubType, description, timestamp, sent) '
                     'VALUES (?, ?, ?, ?, ?)',
                     (taskType, taskSubType, description, timestamp, float(0))
                 )
@@ -166,7 +166,7 @@ class TaskDatabase():
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
                     f'UPDATE {self._table_name} SET '
-                    f'taskType=?, taskSubtype=?, description=?, datetime=?, sent=? WHERE id=?',
+                    f'taskType=?, taskSubtype=?, description=?, timestamp=?, sent=? WHERE id=?',
                     (taskType,taskSubType,description,timestamp, sent, task_id)
                 )
                 conn.commit()
@@ -182,13 +182,13 @@ class TaskDatabase():
             conn.row_factory = sqlite3.Row
             cursor = conn.execute(
                 f'SELECT * FROM {self._table_name}  WHERE sent = 0 '
-                f'ORDER BY datetime ASC, id ASC'
+                f'ORDER BY timestamp ASC, id ASC'
             )
             results = [dict(row) for row in cursor.fetchall()]
             unsent_tasks = []
             for result in results:
                 # Generate the display datestring from the REAL value in the DB
-                result['date'] = self._get_date(result['datetime'])
+                result['date'] = self._get_date(result['timestamp'])
                 unsent_tasks.append(result)
             syslog.msg(f'Returning {len(unsent_tasks)} unsent tasks.')
             return unsent_tasks
@@ -215,7 +215,7 @@ class TaskDatabase():
                 return None
             else:
                 result = results[0]
-                result['date'] = self._get_date(result['datetime'])
+                result['date'] = self._get_date(result['timestamp'])
                 return results[0]
 
     def delete_task(self, task_id: int) -> bool:
