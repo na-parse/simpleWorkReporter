@@ -170,7 +170,9 @@ class SimpleWorkReporter():
                 if not result:
                     flash(f'New task submission failed: {message}','error')
                 else:
-                    flash(f'New task submitted successfully: {message}','success')
+                    # flash(f'New task submitted successfully.','success')
+                    # Dont really need to add a flash, they'll see the new task
+                    pass
             elif is_delete:
                 if self.task_db.delete_task(taskId):
                     flash(f'Successfully deleted task {taskId}','success')
