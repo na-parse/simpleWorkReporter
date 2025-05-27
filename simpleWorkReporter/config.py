@@ -76,7 +76,7 @@ class LoadSwrSettings:
     def update_config(self, 
         service_port: int, worker_name: str, worker_email: str,
         manager_name: str, manager_email: str, smtp: str, access: str = None
-    ) -> Tuple['LoadSwrSettings.UpdateResult', Optional[str]]:
+    ) -> Tuple['UpdateResult', Optional[str]]:
         '''
         Class internal wrapper to general config file update with additional
         logic to handle instantiated class change components
@@ -86,14 +86,14 @@ class LoadSwrSettings:
             smtp, access)
         
         # Check if the service port is being updated
-        new_service_port = not settings['Port'] == self.service_port
+        new_service_port = not service_port == self.service_port
         # Reload settings from updated file
         self.__init__()
         if new_service_port:
-            return (self.UpdateResult.NEW_SERVICE_PORT, None)
+            return (UpdateResult.NEW_SERVICE_PORT, None)
         else:
-            return (self.UpdateResult.UPDATED, None)
-        return (self.UpdateResult.FAILURE, error_message)
+            return (UpdateResult.UPDATED, None)
+        return (UpdateResult.FAILURE, error_message)
 
 
 def _hash_password(password: str, encode_method: str = 'utf-8') -> str:

@@ -31,7 +31,7 @@ import os
 
 from . import defs
 from . import syslog
-from .config import LoadSwrSettings
+from .config import LoadSwrSettings, UpdateResult
 from .tasks import TaskDatabase
 from .errors import *
 from .devtools import vardump
@@ -63,8 +63,12 @@ class SimpleWorkReporter():
                 not request.path.startswith('/static/') and
                 not session.get('authenticated')
             ):
-                #flash('Authentication required. Please log in.', 'warning')
-                return redirect(url_for('www_login', next=request.url))
+                # Missing authentication
+                next_url = request.url
+                if [True for s in ['/update','/submit'] if s in next_url]:
+                    # Don't set next_url for form sumissions, use index instead
+                    next_url = url_for('www_index')
+                return redirect(url_for('www_login', next=next_url))
         
         @self.app.route('/')
         def www_index():
@@ -98,16 +102,16 @@ class SimpleWorkReporter():
                 manager_email = request.form.get('managerEmail'),
                 smtp = request.form.get('smtpServer')
             )
-            if result == self.settings.UpdateResult.NEW_SERVICE_PORT:
+            if result == UpdateResult.NEW_SERVICE_PORT:
                 # Service Port has been updated -- Redirect to restart
                 self.new_service_port = True
                 flash("Configuration updated - New service port requires server restart", "success")
                 return redirect(url_for('www_restart'))
-            elif result == self.settings.UpdateResult.UPDATED:
+            elif result == UpdateResult.UPDATED:
                 # Configuration updated (non-service port) -- Redirect to index
                 flash("Configuration successfully updated.", "success")
                 return redirect(url_for('www_index'))
-            elif result == self.settings.UpdateResult.FAILURE:
+            elif result == UpdateResult.FAILURE:
                 # Error - Set a flash message containing 'message' as an error
                 flash(f"Configuration update failed: {message}", "error")
                 return redirect(url_for('www_config'))
@@ -206,9 +210,6 @@ class SimpleWorkReporter():
                     session.permanent = True # Use PERMANENT_SESSION_LIFETIME
                     flash('Login successful.', 'success')
                     next_url = request.args.get('next') or url_for('www_index')
-                    if [True for s in ['/update','/submit'] if s in next_url]:
-                        # Don't set next_url for form sumissions, use index instead
-                        next_url = url_for('www_index')
                     return redirect(next_url)
                 else:
                     flash('Invalid password.', 'error')
