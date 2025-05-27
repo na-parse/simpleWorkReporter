@@ -206,6 +206,8 @@ class SimpleWorkReporter():
                     session.permanent = True # Use PERMANENT_SESSION_LIFETIME
                     flash('Login successful.', 'success')
                     next_url = request.args.get('next') or url_for('www_index')
+                    if [True for s in ['/update','/submit'] if s in next_url]:
+                        next_url = url_for('www_index')
                     return redirect(next_url)
                 else:
                     flash('Invalid password.', 'error')
