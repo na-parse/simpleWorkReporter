@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import datetime
 from pathlib import Path
+from ssl import SSLContext, PROTOCOL_TLS_SERVER
 
 
 def create_ssl_files(cert_path: Path, key_path: Path):
@@ -54,3 +55,16 @@ def create_ssl_files(cert_path: Path, key_path: Path):
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
         ))
+
+
+def validate_ssl_files(cert_path: Path, key_path: Path) -> bool:
+    '''
+    Read the cert and key files to make sure they are good
+    Returns True for valid, False if there is a problem.
+    '''
+    try:
+        context = SSLContext(PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(cert_path, key_path)
+        return True
+    except Exception as e:
+        return False
