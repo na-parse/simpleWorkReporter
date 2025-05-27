@@ -73,6 +73,16 @@ class LoadSwrSettings:
             return True
         return False
 
+    def _get_server_key_from_access(self):
+        ''' Generates a server key based on the access hash value '''
+        try:
+            server_hash = _hash_password(self.access)
+            return bytes.fromhex(server_hash)
+        except:
+            msg = f'Configuration contains invalid value for Access.  Please reset using setupService.py'
+            raise swrConfigError(msg)
+
+
     def update_config(self, 
         service_port: int, worker_name: str, worker_email: str,
         manager_name: str, manager_email: str, smtp: str, access: str = None
@@ -95,6 +105,7 @@ class LoadSwrSettings:
             return (UpdateResult.UPDATED, None)
         return (UpdateResult.FAILURE, error_message)
 
+        
 
 def _hash_password(password: str, encode_method: str = 'utf-8') -> str:
     '''
@@ -105,7 +116,6 @@ def _hash_password(password: str, encode_method: str = 'utf-8') -> str:
     password = f'0x9c87l1p#9540*D.d1Ad9{password}'
     sha256.update(password.encode(encode_method))
     return sha256.hexdigest()
-
 
 
 def update_config(config_path: Path, service_port: int, 

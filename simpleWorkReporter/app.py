@@ -31,7 +31,7 @@ import os
 
 from . import defs
 from . import syslog
-from .config import LoadSwrSettings, UpdateResult
+from .config import LoadSwrSettings, UpdateResult, _hash_password
 from .tasks import TaskDatabase
 from .errors import *
 from .devtools import vardump
@@ -39,8 +39,8 @@ from .devtools import vardump
 class SimpleWorkReporter():
     def __init__(self, config_path: Path = None, db_path: Path = None):
         self.app = Flask(__name__)
-        self.app.secret_key = os.urandom(24)  # Required for flash messages
         self.settings = LoadSwrSettings(config_path=config_path)
+        self.app.secret_key = self.settings._get_server_key_from_access()
         self.task_db = TaskDatabase(db_path=db_path)
         self.new_service_port = None # Used if port update requires restart
         self._set_routes()
