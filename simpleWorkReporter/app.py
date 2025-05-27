@@ -207,6 +207,7 @@ class SimpleWorkReporter():
                     flash('Login successful.', 'success')
                     next_url = request.args.get('next') or url_for('www_index')
                     if [True for s in ['/update','/submit'] if s in next_url]:
+                        # Don't set next_url for form sumissions, use index instead
                         next_url = url_for('www_index')
                     return redirect(next_url)
                 else:
