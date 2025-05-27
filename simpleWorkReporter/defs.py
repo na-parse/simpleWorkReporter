@@ -21,6 +21,10 @@ DEFAULT_TASK_TIME = '12:00:01'
 # Default directory for app data is ../ tracked from these modules
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent
 
+# Web Server SSL Certificate Files
+SSL_KEY_FILE  = DEFAULT_DATA_DIR / 'key.pem'
+SSL_CERT_FILE = DEFAULT_DATA_DIR / 'cert.pem'
+
 # System console output and logging Defaults
 LOG_APP_NAME  = 'simpleWorkReporter'
 LOG_FILE_NAME = 'swr_service.log'
