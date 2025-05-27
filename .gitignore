@@ -2,9 +2,12 @@
 worker.conf
 *.db
 *.log
+*.pem
 
-# Don't include the developer run file
+
+# Don't include the develment stuff
 test.py
+*.orig
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
