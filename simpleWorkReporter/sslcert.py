@@ -1,9 +1,9 @@
 '''
 simpleWorkReporter - sslcert.py
     Provides a basic method for creating self-signed certificates for running
-    the web server with SSL.
+    the web server with SSL and managing, validating the cert files.
 
-    This produces results equivalent to the openssl command:
+    This produces an x509 certificate equivalent to the openssl command:
         openssl req -x509 -newkey rsa:4096 -nodes \
             -out cert.pem -keyout key.pem \
             -days 2920
