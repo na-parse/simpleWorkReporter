@@ -13,6 +13,7 @@ from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import datetime
+import os
 from pathlib import Path
 from ssl import SSLContext, PROTOCOL_TLS_SERVER
 
@@ -68,3 +69,21 @@ def validate_ssl_files(cert_path: Path, key_path: Path) -> bool:
         return True
     except Exception as e:
         return False
+
+
+def is_ssl_configured(cert_path: Path, key_path: Path) -> bool:
+    """Check if SSL certificates are properly configured."""
+    if (
+        os.path.isfile(cert_path)
+        and os.path.isfile(key_path)
+    ):
+        return validate_ssl_files(cert_path, key_path)
+    return False
+
+
+def remove_ssl_files(cert_path: Path, key_path: Path):
+    """Remove existing SSL certificate files."""
+    if os.path.isfile(cert_path):
+        os.remove(cert_path)
+    if os.path.isfile(key_path):
+        os.remove(key_path)
