@@ -25,6 +25,7 @@ from flask import (
 from urllib.parse import urlparse, urlunparse
 from pathlib import Path
 from datetime import datetime
+from ssl import SSLError
 import time
 import os
 
@@ -248,4 +249,42 @@ class SimpleWorkReporter():
 
     
     def run(self):
-        self.app.run(host='0.0.0.0', port=self.settings.service_port,debug=True)
+        ssl_context = _check_for_ssl_context()
+        try:
+            self.app.run(
+                host='0.0.0.0', 
+                port=self.settings.service_port,
+                ssl_context=ssl_context,
+                debug=True)
+        except SSLError:
+            print(
+                f'ERROR: There is an issue with the SSL cert and key files:\n'
+                f'{", ".join([str(x) for x in ssl_context])}\n'
+                f'Run setupService.py for assistance regenerating corrupt SSL files.'
+            )
+            exit(1)
+
+
+def _check_for_ssl_context():
+    '''
+    Checks current environment to determine if it the web service should
+    run as an HTTP service or use SSL.  We are skipping support for adhoc
+    mode due to the extra library dependecy and will advise users how to
+    create self-signed keys instead during setup.
+    '''
+    ssl_context = None # set default result
+    if (
+        os.path.isfile(defs.SSL_CERT_FILE)
+        and os.path.isfile(defs.SSL_KEY_FILE)
+    ):
+        ssl_context = (defs.SSL_CERT_FILE, defs.SSL_KEY_FILE)
+    # Print a warning message about HTTP mode if no SSL context set
+    if ssl_context is None:
+        print(
+            f'WARNING: SSL mode is highly recommended due to network scanning and '
+            f'security expectations in working environments. \n'
+            f'Please run setupService.py if you need assistance creating SSL keys '
+            f'for the {defs.PACKAGE_NAME} package.\n'
+            f'Continuing in HTTP mode...'
+        )
+    return ssl_context
