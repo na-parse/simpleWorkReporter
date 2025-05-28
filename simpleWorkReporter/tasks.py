@@ -205,7 +205,6 @@ class TaskDatabase():
         return count
 
 
-
     def get_task(self, task_id):
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -231,7 +230,22 @@ class TaskDatabase():
                 return False
             else:
                 return True
-    
+    def set_tasks_as_sent(self, tasks: list):
+        sent_time = time.time()
+        with sqlite3.connect(self.db_path) as conn:
+            for task in tasks:
+                cursor = conn.execute(
+                    f'UPDATE {self._table_name} SET sent = ? WHERE id = ?',
+                    (sent_time, task["id"])
+                )
+                if not cursor.rowcount:
+                    raise swrDatabaseError(f'Unable to update task ID {task["id"]} as sent.')
+                conn.commit()
+                syslog.msg(
+                    f'Updated task ID {task["id"]} as sent {sent_time}'
+                )
+            
+
 
     def debug_set_all_sent(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
@@ -261,4 +275,16 @@ class TaskDatabase():
                 
 
 
-        
+
+def _get_date_range(tasks: list) -> str:
+    ''' 
+    Quick format - Take a list of taskdb swr_task items and generate
+      a date range for the included items:
+        "YYYY-MM-DD" if only a single date, or
+        "YYYY-MM-DD - YYYY-MM-DD" if multiple
+    '''
+    dates = list({ x['date'] for x in tasks })
+    dates.sort()
+    date_range = f'{dates[0]}' if len(dates) > 0 else ''
+    date_range += f' - {dates[-1]}' if len(dates) > 1 else ''
+    return date_range

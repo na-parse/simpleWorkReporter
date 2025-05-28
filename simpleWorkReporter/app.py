@@ -14,13 +14,8 @@ Usage:
 
 # Flask specific imports (maybe I should just import flask?
 from flask import (
-    Flask, 
-    render_template, 
-    request, 
-    flash, 
-    redirect, 
-    url_for,
-    session
+    Flask, render_template, request, 
+    flash, redirect, url_for, session
 )
 from urllib.parse import urlparse, urlunparse
 from pathlib import Path
@@ -28,13 +23,16 @@ from datetime import datetime
 from ssl import SSLError
 import time
 import os
+import subprocess
 
 from . import defs
 from . import syslog
 from .config import LoadSwrSettings, UpdateResult, _hash_password
-from .tasks import TaskDatabase
+from .tasks import TaskDatabase, _get_date_range
+from .mailer import send_report_email
 from .errors import *
 from .devtools import vardump
+
 
 class SimpleWorkReporter():
     def __init__(self, config_path: Path = None, db_path: Path = None):
@@ -194,14 +192,64 @@ class SimpleWorkReporter():
 
         @self.app.route('/send')
         def www_send_report():
-            ''' 
-            Email the report - Confirmation and interactive window
-            '''
+            ''' Preview the report before sending '''
             page_title = "Send Daily Report"
+            tasks = self.task_db.get_unsent_tasks()
+            # Dump back to index with a message if nothing to report
+            if len(tasks) < 1:
+                flash(f'No unsent tasks available to report.','warning')
+                return redirect(url_for('www_index'))
+
+            date_range = _get_date_range(tasks)
+            service_host = _get_full_hostname()
+
             return render_template('send.html',
                 page_title=page_title,
-                settings=dict(self.settings)
+                settings=dict(self.settings),
+                date_range=date_range,
+                tasks=tasks,
+                service_host=service_host,
+                preview=True
             )
+        
+        @self.app.route('/send/confirm', methods=['GET','POST'])
+        def www_send_report_confirm():
+            ''' 
+            Send Confirmation
+            '''
+            if not request.form.get('confirm','') == 'confirm':
+                flash(f'Direct link to confirm send is not supported.','warning')
+                return redirect(url_for('www_index'))
+
+            tasks = self.task_db.get_unsent_tasks()
+            # Dump back to index with a message if nothing to report
+            if len(tasks) < 1:
+                flash(f'No unsent tasks available to report.','warning')
+                return redirect(url_for('www_index'))
+
+            date_range = _get_date_range(tasks)
+            service_host = _get_full_hostname()
+
+            # Generate the report text body
+            report_body = render_template('report.html',
+                settings=dict(self.settings),
+                date_range=date_range,
+                tasks=tasks,
+                service_host=service_host
+            )
+            # Attempt to send the email
+            result, message = send_report_email(
+                dict(self.settings), report_body, date_range
+            )
+            if not result:
+                flash(f'Unable to send email: {message}','warning')
+                return redirect(url_for('www_send_report'))
+            else:
+                # Update the reported tasks as sent
+                self.task_db.set_tasks_as_sent(tasks)
+                flash(f'Work summary email successfully sent.','success')
+                return redirect(url_for('www_index'))
+
 
         @self.app.route('/login', methods=['GET','POST'])
         def www_login():
@@ -229,12 +277,6 @@ class SimpleWorkReporter():
             flash('You have been logged out.', 'info')
             return redirect(url_for('www_login'))
 
-        @self.app.route('/send/y')
-        def www_send_report_confirmed():
-            '''
-            Actually send the report
-            '''
-            return "Sending report"
 
         @self.app.route('/restart')
         def www_restart():
@@ -294,3 +336,15 @@ def _check_for_ssl_context():
             f'Continuing in HTTP mode...'
         )
     return ssl_context
+
+def _get_full_hostname() -> str:
+  if os.name == 'posix':
+    result = subprocess.run(['hostname','-f'],capture_output=True, text=True)
+    return result.stdout.strip()
+  if os.name == 'nt':
+    hostname = socket.gethostname()
+    domain = os.getenv('USERDOMAIN')
+    if domain: hostname += f'.{domain}'
+    return hostname
+  # who knows... return something
+  return socket.gethostname()

@@ -8,7 +8,7 @@ try:
 except ModuleNotFoundError:
     errors += (
         f'MISSING: "flask" module failed to import, do you need to install it?\n'
-        f' python3 -m pip install flask'
+        f' python3 -m pip install flask\n'
     )
 
 try:
@@ -16,7 +16,7 @@ try:
 except ModuleNotFoundError:
     errors += (
         f'MISSING: "cryptography" module failed to import, do you need to install it?\n'
-        f' python3 -m pip install cryptography'
+        f' python3 -m pip install cryptography\n'
     )
 
 if errors:
