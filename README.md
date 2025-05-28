@@ -43,19 +43,25 @@ Open a webpage to your specified host and port and start adding work tasks!
 
 ![simpleWorkReporter homepage](/simpleWorkReporter/static/images/simpleWorkReporter_home.png)
 
-## Sending the Report
+## Sending the Report - Manually
 
-NOT_IMPLEMENTED
-... still working on the mailer part, but the button is there
+Report can be sent manually via the webapp by clicking on the _Send Daily Report_.  This loads another page allowing you to review pending tasks and the current email settings before sending the report.
 
+Clicking _Send_ will immediately send the email.  TODO: Script performs email exchange with remote SMTP server before any response on the client side.  Need to add some 'click-once' javascript to prevent multi-submission conflicts.
+
+## Sending the Report - CLI or Scheduled
+
+The simpleWorkReporter package includes the script `sendReport.py` to initiate the report email from the command line.  This can be used with task schedulers such as cron to setup automatic report transmission.
+
+Note that sendReport.py will immediately send the email without asking for confirmation.  Additionally, no stdout output is generated when it runs headless so schedulers do not generate excessive result emails.
 
 
 ## Dev Roadmap
 
-- Mailer handling
-  - Will use smtplib
-  - Only supporting non-TLS 25 mode for now
-  - smtplib supports TLS but I don't have a credential strategy right now
+- Mailer
+  - Add a web-app based API for sending email to remove necessity for local system scheduler
+- Appearance
+  - Support for a Dark Mode for the interface
 
 
 ## About
