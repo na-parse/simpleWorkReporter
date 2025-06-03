@@ -23,6 +23,7 @@ from datetime import datetime
 from ssl import SSLError
 import time
 import os
+import socket
 import subprocess
 
 from . import defs
