@@ -124,7 +124,6 @@ class SimpleWorkReporter():
         def www_task(id=id):
             delete_confirm = 'task/delete' in request.url
             task_action = "Edit" if not delete_confirm else "Delete"
-
             page_title = f"{task_action} Task {id}"
             task = self.task_db.get_task(id)
             if not task:
@@ -141,6 +140,21 @@ class SimpleWorkReporter():
                 delete_confirm=delete_confirm,
                 settings=dict(self.settings)
             )
+
+        @self.app.route('/alltasks')
+        def www_view_all_tasks():
+            tasks = self.task_db.get_tasks(order_by="id DESC")
+            page_title = f'All Tasks'
+            task_action = "alltasks"
+            return render_template(
+                'all_tasks.html',
+                page_title=page_title,
+                page_alltasks=True,
+                tasks=tasks,
+                settings=dict(self.settings)
+            )
+
+
 
         @self.app.route('/submit/task', methods=['POST'])
         def www_submit_task():

@@ -174,24 +174,37 @@ class TaskDatabase():
             return False, str(e)
         return True, None
 
-    def get_unsent_tasks(self) -> list:
+    def get_tasks(self, unsent_only: bool = False, order_by: str = None) -> list:
         '''
         Returns a list of all unsent task table enteries (dicts)
         '''
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute(
-                f'SELECT * FROM {self._table_name}  WHERE sent = 0 '
-                f'ORDER BY timestamp ASC, id ASC'
-            )
+            exec_str = f'SELECT * FROM {self._table_name} '
+            if unsent_only: 
+                exec_str += 'WHERE sent = 0 '
+            if not order_by:
+                exec_str += 'ORDER BY id ASC'
+            else:
+                exec_str += f'ORDER BY {order_by}'
+            
+            cursor = conn.execute(exec_str)
             results = [dict(row) for row in cursor.fetchall()]
-            unsent_tasks = []
+            tasks = []
             for result in results:
                 # Generate the display datestring from the REAL value in the DB
                 result['date'] = self._get_date(result['timestamp'])
-                unsent_tasks.append(result)
-            syslog.msg(f'Returning {len(unsent_tasks)} unsent tasks.')
-            return unsent_tasks
+                if result['sent']:
+                    result['sentdate'] = self._get_date(result['sent'])
+                else:
+                    result['sentdate'] = None
+                tasks.append(result)
+            syslog.msg(f'Returning {len(tasks)} tasks.')
+            return tasks
+
+    def get_unsent_tasks(self) -> list:
+        tasks = self.get_tasks(unsent_only=True)
+        return tasks
     
     def get_unsent_tasks_count(self) -> int:
         ''' Basic call to get unsent task tally when we don't need the values '''
