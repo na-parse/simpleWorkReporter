@@ -11,6 +11,12 @@ import random
 # Package Name
 PACKAGE_NAME = "simpleWorkReporter"
 
+# Report Email Subject Line
+# Argument tags available:
+#   %worker_name% - Configured Worker Name
+#   %date_range% - Date ranges included in report
+EMAIL_SUBJECT = "Work Summary Report for %worker_name% : %date_range%"
+
 # DEBUG - Set to any value to enable debugging messages
 DEBUG = None
 

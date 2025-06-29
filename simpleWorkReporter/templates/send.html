@@ -1,34 +1,22 @@
 {% include '_header.html' %}
 
 <div class="container">
-  <div class="entry-panel" style="max-width: 600px; margin: 0 auto;">
-    <h2 class="panel-title">Send Work Report</h2>
+  <div class="entry-panel" style="max-width: 900px; margin: 0 auto;">
+    <h2 class="panel-title">Review Pending Work Report</h2>
     <p style="margin-bottom: 18px;">
-      Review the report details below. Confirm to send your daily work report.
+      Review the report details below before sending your daily work report.
     </p>
-    <table class="work-items-table" style="margin-bottom: 18px; width: 100%; max-width: 100%;">
-      <tbody>
-        <tr>
-          <th style="width: 40%;">Send From</th>
-          <td>{{ sender }}</td>
-        </tr>
-        <tr>
-          <th>Send To</th>
-          <td>{{ recipient }}</td>
-        </tr>
-        <tr>
-          <th>Tasks Included</th>
-          <td>{{ task_count }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <form method="post" action="{{ url_for('www_send_report_confirm') }}">
+    <input type="hidden" id="confirm" name="confirm" value="confirm">
     <div class="form-actions">
+      <button style="display: in-line;" type="submit" class="btn">Send</button>
       <a href="/" class="btn btn-secondary">Cancel</a>
-      <form action="/send/confirm" method="post" style="display: inline;">
-        <button type="submit" class="btn">Send</button>
-      </form>
     </div>
+    </form>
   </div>
 </div>
+
+{% include "_report_body.html" %}
+
 </body>
 </html>

@@ -1,0 +1,71 @@
+{% include '_header.html' %}
+
+
+  <div class="container">
+    <div class="main-layout">
+
+      <!-- Work Items Panel -->
+      <div class="items-panel">
+        <h2 class="panel-title">All Saved Task Entries</h2>
+        <table class="work-items-table">
+          <thead>
+            <tr>
+              <th width="5%">ID</th>
+              <th width="8%">Date</th>
+              <th width="10%">Task Type</th>
+              <th width="10%">Sub Type</th>
+              <th>Description</th>
+              <th>Sent</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if not tasks %}
+            <tr class="clickable-row">
+              <td colspan=6>No tasks to display...</td>
+            </tr>
+            {% endif %}
+            {% for task in tasks %}
+            <tr class="clickable-row">
+              <td>
+                {% if not task.sent %}
+                <a class="date-link" href="/task/{{ task.id }}" 
+                  title="Edit Task {{ task.id }}">{% endif %}
+                  {{ task.date }}
+                  {% if not task.sent %}</a>{% endif %}
+              </td>
+              <td>{{ task.id }}</td>
+              <td>{{ task.taskType }}</td>
+              <td>{{ task.taskSubType }}</td>
+              <td>{{ task.description }}</td>
+              <td>{{ task.sentdate }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('manualTime').addEventListener('change', function() {
+      const dateField = document.getElementById('dateField');
+      if (this.checked) {
+        dateField.classList.add('visible');
+      } else {
+        dateField.classList.remove('visible');
+      }
+    });
+    
+    // document.addEventListener('DOMContentLoaded', function() {
+    //   const rows = document.querySelectorAll('.clickable-row');
+    //   rows.forEach(row => {
+    //     row.addEventListener('click', function() {
+    //       window.location.href = this.dataset.href;
+    //     });
+    //   });
+    // });;
+
+    
+  </script>
+</body>
+</html>
