@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     '''Run database maintenance commands.'''
     configure_logging()
     parser = argparse.ArgumentParser(
-        prog='db_tool',
+        prog='swr db',
         description=(
             'Database maintenance for simpleWorkReporter. A subcommand is '
             'required; running without one prints this help and exits.'
@@ -72,6 +72,24 @@ def main(argv: list[str] | None = None) -> int:
         action='store_true',
         help='skip the interactive confirmation for --clear',
     )
+    convert_parser = subparsers.add_parser(
+        'convert-swr1-db',
+        help='import a legacy v1 tasks.db into the v2 database',
+        description=(
+            'Copy task rows from a legacy simpleWorkReporter v1 tasks.db '
+            'into the configured v2 database. Joins the old taskType and '
+            'taskSubType columns with a space. One-shot migration utility.'
+        ),
+    )
+    convert_parser.add_argument(
+        'source',
+        help='path to the legacy v1 tasks.db file',
+    )
+    convert_parser.add_argument(
+        '--force',
+        action='store_true',
+        help='append rows even if the destination already contains tasks',
+    )
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help(sys.stderr)
@@ -85,12 +103,18 @@ def main(argv: list[str] | None = None) -> int:
         if args.yes:
             demo_args.append('--yes')
         return demo(demo_args)
+    if args.command == 'convert-swr1-db':
+        from . import db_convert
+        convert_args = [args.source]
+        if args.force:
+            convert_args.append('--force')
+        return db_convert.main(convert_args)
     return 2
 
 
 def init(argv: list[str] | None = None) -> int:
     '''Initialize or validate the database.'''
-    parser = argparse.ArgumentParser(prog='db_tool init')
+    parser = argparse.ArgumentParser(prog='swr db init')
     parser.parse_args(argv)
     try:
         database = db.initialize_database()
@@ -106,7 +130,7 @@ def init(argv: list[str] | None = None) -> int:
 
 def demo(argv: list[str] | None = None) -> int:
     '''Seed varied demo work entries.'''
-    parser = argparse.ArgumentParser(prog='db_tool demo')
+    parser = argparse.ArgumentParser(prog='swr db demo')
     parser.add_argument(
         '--clear',
         action='store_true',
@@ -139,7 +163,7 @@ def demo(argv: list[str] | None = None) -> int:
 
 def _confirm_clear() -> bool:
     '''Prompt for confirmation before deleting task records.'''
-    print('WARNING: ./db_tool demo --clear deletes every existing task record.')
+    print('WARNING: ./swr db demo --clear deletes every existing task record.')
     print(f'Database: {paths.database_path()}')
     try:
         response = input('Type "yes" to delete existing tasks and seed demo data: ')

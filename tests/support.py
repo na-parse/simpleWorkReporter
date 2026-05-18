@@ -7,8 +7,8 @@ import os
 import tempfile
 import unittest
 
-from swr2 import db
-from swr2.settings import WorkerSettings
+from simpleworkreporter import db
+from simpleworkreporter.settings import WorkerSettings
 
 # Tests exercise paths that log liberally at INFO. Globally disable INFO and
 # below so `python -m unittest` output stays readable. logging.disable beats
@@ -102,7 +102,7 @@ class WebTestCase(TempHomeTestCase):
         super().setUp()
         # Local import so the support module stays import-safe even if a
         # Flask-less subset of tests is run.
-        from swr2.web import create_app
+        from simpleworkreporter.web import create_app
 
         self.settings = make_settings(passphrase=self.PASSPHRASE)
         self.app = create_app(self.settings)

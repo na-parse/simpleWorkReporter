@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from swr2 import db
+from simpleworkreporter import db
 
 from tests.support import WebTestCase
 
@@ -175,10 +175,10 @@ class WebConfigTests(WebTestCase):
         self.assertIn(b'worker@example.com', rv.data)
         self.assertIn(b'smtp.example.test', rv.data)
 
-    def test_get_config_shows_setup_server_breadcrumb(self) -> None:
+    def test_get_config_shows_swr_setup_breadcrumb(self) -> None:
         # Notice steering users to the CLI for port / use_https.
         rv = self.client.get('/config')
-        self.assertIn(b'setup_server', rv.data)
+        self.assertIn(b'./swr setup', rv.data)
 
     def test_post_config_with_valid_data_persists(self) -> None:
         rv = self.client.post('/config', data={
@@ -238,7 +238,7 @@ class WebSendTests(WebTestCase):
     def test_post_send_happy_path_marks_tasks_sent(self) -> None:
         tid = db.add_task('Outgoing', 'Outgoing body')
         smtp = MagicMock()
-        with patch('swr2.mail.smtplib.SMTP') as smtp_class:
+        with patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class:
             smtp_class.return_value.__enter__.return_value = smtp
             rv = self.client.post('/send')
         self.assertEqual(302, rv.status_code)
@@ -250,7 +250,7 @@ class WebSendTests(WebTestCase):
     def test_post_send_surfaces_mail_send_error_as_flash(self) -> None:
         db.add_task('Outgoing', 'body')
         with patch(
-            'swr2.mail.smtplib.SMTP',
+            'simpleworkreporter.mail.smtplib.SMTP',
             side_effect=OSError('connection refused'),
         ):
             rv = self.client.post('/send', follow_redirects=False)

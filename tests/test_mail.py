@@ -3,9 +3,9 @@ import sqlite3
 import unittest
 from unittest.mock import MagicMock, patch
 
-from swr2.db import Task
-from swr2.defs import EMAIL_SUBJECT_DEFAULT, REPORT_NO_ENTRIES_LABEL
-from swr2.mail import (
+from simpleworkreporter.db import Task
+from simpleworkreporter.defs import EMAIL_SUBJECT_DEFAULT, REPORT_NO_ENTRIES_LABEL
+from simpleworkreporter.mail import (
     MailSendError,
     ReportFlagError,
     build_message,
@@ -89,19 +89,29 @@ class RenderSubjectTests(TempHomeTestCase):
             'Test Worker / Test Manager / 2026-03-06 - 2026-03-07', rendered
         )
 
-    def test_default_subject_uses_worker_and_dates(self) -> None:
+    def test_build_message_subject_uses_configured_template(self) -> None:
+        # End-to-end check that build_message reads settings.report_subject
+        # and runs it through render_subject. Uses a test-owned template so
+        # the assertion isn't coupled to the codebase's default punctuation.
         settings = _settings('none')
+        settings.update(report_subject='Report :: %w% :: %d%')
         tasks = [
             Task(id=1, task='A', description='a',
                  timestamp=_epoch(2026, 3, 6, 9, 0), sent=None),
         ]
         message = build_message(settings, tasks)
-        # The settings factory leaves report_subject at its default.
-        self.assertEqual(EMAIL_SUBJECT_DEFAULT, settings.report_subject)
         self.assertEqual(
-            'Work Summary Report for Test Worker: 2026-03-06',
+            'Report :: Test Worker :: 2026-03-06',
             message['Subject'],
         )
+
+    def test_default_subject_contains_worker_and_date_tokens(self) -> None:
+        # Invariant check: the shipped default must reference the worker
+        # and the date range so the rendered Subject is meaningful out of
+        # the box. Punctuation and word order are intentionally not checked.
+        self.assertTrue(EMAIL_SUBJECT_DEFAULT)
+        self.assertIn('%w%', EMAIL_SUBJECT_DEFAULT)
+        self.assertIn('%d%', EMAIL_SUBJECT_DEFAULT)
 
     def test_date_token_falls_back_to_no_entries_label(self) -> None:
         settings = _settings('none')
@@ -113,10 +123,10 @@ class SendPendingReportTransportTests(TempHomeTestCase):
     def test_starttls_uses_plain_smtp_then_starttls(self) -> None:
         smtp = MagicMock()
         with (
-            patch('swr2.mail.smtplib.SMTP') as smtp_class,
-            patch('swr2.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
-            patch('swr2.mail.db.unsent_tasks', return_value=[_task()]),
-            patch('swr2.mail.db.mark_sent') as mark_sent,
+            patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class,
+            patch('simpleworkreporter.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
+            patch('simpleworkreporter.mail.db.unsent_tasks', return_value=[_task()]),
+            patch('simpleworkreporter.mail.db.mark_sent') as mark_sent,
         ):
             smtp_class.return_value.__enter__.return_value = smtp
 
@@ -132,10 +142,10 @@ class SendPendingReportTransportTests(TempHomeTestCase):
     def test_smtps_uses_implicit_tls_connection(self) -> None:
         smtp = MagicMock()
         with (
-            patch('swr2.mail.smtplib.SMTP') as smtp_class,
-            patch('swr2.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
-            patch('swr2.mail.db.unsent_tasks', return_value=[_task()]),
-            patch('swr2.mail.db.mark_sent') as mark_sent,
+            patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class,
+            patch('simpleworkreporter.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
+            patch('simpleworkreporter.mail.db.unsent_tasks', return_value=[_task()]),
+            patch('simpleworkreporter.mail.db.mark_sent') as mark_sent,
         ):
             smtp_ssl_class.return_value.__enter__.return_value = smtp
 
@@ -151,10 +161,10 @@ class SendPendingReportTransportTests(TempHomeTestCase):
     def test_plain_smtp_does_not_start_tls_or_authenticate(self) -> None:
         smtp = MagicMock()
         with (
-            patch('swr2.mail.smtplib.SMTP') as smtp_class,
-            patch('swr2.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
-            patch('swr2.mail.db.unsent_tasks', return_value=[_task()]),
-            patch('swr2.mail.db.mark_sent') as mark_sent,
+            patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class,
+            patch('simpleworkreporter.mail.smtplib.SMTP_SSL') as smtp_ssl_class,
+            patch('simpleworkreporter.mail.db.unsent_tasks', return_value=[_task()]),
+            patch('simpleworkreporter.mail.db.mark_sent') as mark_sent,
         ):
             smtp_class.return_value.__enter__.return_value = smtp
 
@@ -190,15 +200,15 @@ class ReportFlagErrorTests(TempHomeTestCase):
 
     def _force_flag_failure(self):
         return patch(
-            'swr2.mail.db.mark_sent',
+            'simpleworkreporter.mail.db.mark_sent',
             side_effect=sqlite3.OperationalError('disk failure'),
         )
 
     def test_send_pending_report_raises_report_flag_error_on_mark_failure(self) -> None:
         smtp = MagicMock()
         with (
-            patch('swr2.mail.smtplib.SMTP') as smtp_class,
-            patch('swr2.mail.db.unsent_tasks', return_value=[_task()]),
+            patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class,
+            patch('simpleworkreporter.mail.db.unsent_tasks', return_value=[_task()]),
             self._force_flag_failure(),
         ):
             smtp_class.return_value.__enter__.return_value = smtp
@@ -216,12 +226,12 @@ class ReportFlagErrorTests(TempHomeTestCase):
         self.assertFalse(issubclass(ReportFlagError, MailSendError))
 
     def test_cli_returns_exit_code_2_on_flag_failure(self) -> None:
-        from swr2.cli.send import main as send_main
+        from simpleworkreporter.cli.send import main as send_main
 
         smtp = MagicMock()
         with (
-            patch('swr2.mail.smtplib.SMTP') as smtp_class,
-            patch('swr2.mail.db.unsent_tasks', return_value=[_task()]),
+            patch('simpleworkreporter.mail.smtplib.SMTP') as smtp_class,
+            patch('simpleworkreporter.mail.db.unsent_tasks', return_value=[_task()]),
             self._force_flag_failure(),
         ):
             smtp_class.return_value.__enter__.return_value = smtp

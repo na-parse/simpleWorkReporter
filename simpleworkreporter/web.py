@@ -181,7 +181,7 @@ def create_app(settings: WorkerSettings | None = None) -> Flask:
                 flash(
                     f'Report sent ({exc.count} entries) but the database flag '
                     f'update failed. Task IDs {exc.task_ids} are still marked '
-                    f'unsent — clear via db_tool before sending again to avoid '
+                    f'unsent — clear via ./swr db before sending again to avoid '
                     f'a duplicate email.',
                     'warning',
                 )

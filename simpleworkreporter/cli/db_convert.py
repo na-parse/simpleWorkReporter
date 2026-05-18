@@ -1,19 +1,12 @@
-#!/usr/bin/env python3
-'''Convert a legacy simpleWorkReporter v1 task database into the v2 layout.
+'''Legacy v1 → v2 tasks database conversion.
 
 The v1 schema stored task identity as two columns (`taskType`, `taskSubType`)
 in a `swr_tasks` table; v2 collapses them into a single `task` column in a
-`tasks` table living under SWR_HOME. This script copies rows across, joining
+`tasks` table living under SWR_HOME. This module copies rows across, joining
 the two old columns with a space.
 
-Usage:
-    ./deploy/db_convert_swr1.py /path/to/old/tasks.db
-    SWR_HOME=/tmp/swr-test ./deploy/db_convert_swr1.py ./tasks.db --force
-
-The destination data directory (SWR_HOME or ~/.simpleWorkReporter) and the
-v2 `tasks.db` are created if they do not already exist. If the destination
-table already contains rows, the script refuses to write unless `--force` is
-passed, in which case the new rows are appended.
+Invoked via `./swr db convert-swr1-db <path>`. This is a one-shot utility
+kept as its own module so it can be removed once the v1 fleet is gone.
 '''
 
 from __future__ import annotations
@@ -23,12 +16,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
-
-# Allow running directly from the deploy/ subdirectory.
-REPO_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_DIR))
-
-from swr2 import db, paths  # noqa: E402
+from .. import db
+from .. import paths
 
 
 # =============================================================================
@@ -107,8 +96,9 @@ def _project_row(row: sqlite3.Row) -> tuple[str, str, int, int | None]:
 # =============================================================================
 
 def main(argv: list[str] | None = None) -> int:
+    '''CLI entry point for `./swr db convert-swr1-db`.'''
     parser = argparse.ArgumentParser(
-        prog='db_convert_swr1',
+        prog='swr db convert-swr1-db',
         description='Convert a v1 simpleWorkReporter tasks.db to the v2 layout.',
     )
     parser.add_argument(

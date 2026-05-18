@@ -1,4 +1,4 @@
-'''CRUD coverage for swr2.db.'''
+'''CRUD coverage for simpleworkreporter.db.'''
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from datetime import datetime
 import time
 import unittest
 
-from swr2 import db
-from swr2.defs import DEFAULT_BACKDATED_TIME
+from simpleworkreporter import db
+from simpleworkreporter.defs import DEFAULT_BACKDATED_TIME
 
 from tests.support import TempHomeTestCase
 

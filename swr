@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+'''Unified simpleWorkReporter command dispatcher.
+
+Usage:
+    ./swr <verb> [args...]
+
+Verbs:
+    start            Start the web service
+    setup, config    Run the interactive setup / reconfigure wizard
+    db               Database maintenance (init, demo, convert-swr1-db)
+    cert             Self-signed HTTPS certificate maintenance
+    send             Send the pending report (cron-friendly)
+
+Each verb forwards the remaining arguments to its underlying tool. Run
+`./swr <verb> -h` for verb-specific help.
+'''
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+
+REPO_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(REPO_DIR))
+
+
+# =============================================================================
+# Verb dispatch
+# =============================================================================
+
+def _run_start(argv: list[str]) -> int:
+    from simpleworkreporter.cli.server import main
+    return main(argv)
+
+
+def _run_setup(argv: list[str]) -> int:
+    from simpleworkreporter.cli.setup import main
+    return main(argv)
+
+
+def _run_db(argv: list[str]) -> int:
+    from simpleworkreporter.cli.db_tool import main
+    return main(argv)
+
+
+def _run_cert(argv: list[str]) -> int:
+    from simpleworkreporter.cli.cert_tool import main
+    return main(argv)
+
+
+def _run_send(argv: list[str]) -> int:
+    from simpleworkreporter.cli.send import main
+    return main(argv)
+
+
+VERBS = {
+    'start': _run_start,
+    'setup': _run_setup,
+    'config': _run_setup,
+    'db': _run_db,
+    'cert': _run_cert,
+    'send': _run_send,
+}
+
+
+# =============================================================================
+# Help
+# =============================================================================
+
+HELP_TEXT = '''Usage: ./swr <verb> [args...]
+
+Verbs:
+  start            Start the web service
+  setup            Run the interactive setup / reconfigure wizard
+  config           Alias for setup
+  db               Database maintenance (init, demo, convert-swr1-db)
+  cert             Self-signed HTTPS certificate maintenance
+  send             Send the pending report (cron-friendly)
+
+Run `./swr <verb> -h` for verb-specific help.
+'''
+
+
+def main(argv: list[str]) -> int:
+    if not argv or argv[0] in ('-h', '--help', 'help'):
+        sys.stdout.write(HELP_TEXT)
+        return 0 if argv and argv[0] in ('-h', '--help', 'help') else 2
+    verb, *rest = argv
+    handler = VERBS.get(verb)
+    if handler is None:
+        sys.stderr.write(f'./swr: unknown verb {verb!r}\n\n')
+        sys.stderr.write(HELP_TEXT)
+        return 2
+    return handler(rest)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main(sys.argv[1:]))

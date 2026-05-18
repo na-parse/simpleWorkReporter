@@ -15,7 +15,7 @@ from .ui import TerminalUI
 
 def main(argv: list[str] | None = None) -> int:
     '''Run the setup wizard.'''
-    parser = argparse.ArgumentParser(prog='setup_server')
+    parser = argparse.ArgumentParser(prog='swr setup')
     parser.parse_args(argv)
     run_setup()
     return 0
@@ -60,9 +60,9 @@ def _run_setup(ui: TerminalUI) -> None:
     ui.success(f'Configuration written to {settings.config_path}')
     if settings.use_https and not is_ssl_configured():
         ui.note('HTTPS is enabled; a self-signed certificate will be generated')
-        ui.note('on first ./start_server, or you can run ./cert_tool create now.')
+        ui.note('on first ./swr start, or you can run ./swr cert create now.')
     ui.success('Setup complete.')
-    ui.note('Start the service with: ./start_server')
+    ui.note('Start the service with: ./swr start')
 
 
 def _show_paths(ui: TerminalUI, config_exists: bool, config_complete: bool) -> None:
@@ -353,9 +353,9 @@ def _cert_status() -> str:
     if cert.exists() and key.exists():
         if is_ssl_configured():
             return 'cert.pem and key.pem present and valid'
-        return 'cert.pem and key.pem present but INVALID (run ./cert_tool regen)'
+        return 'cert.pem and key.pem present but INVALID (run ./swr cert regen)'
     if cert.exists() or key.exists():
-        return 'incomplete certificate files present (run ./cert_tool regen)'
+        return 'incomplete certificate files present (run ./swr cert regen)'
     return 'no certificate files'
 
 
