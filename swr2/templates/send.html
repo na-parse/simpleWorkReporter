@@ -14,8 +14,7 @@
       <a class="button" href="{{ url_for('dashboard') }}">Back</a>
     </form>
   </div>
-  <div class="report-preview">
-    {{ report_html|safe }}
-  </div>
+  <iframe class="report-preview" sandbox="allow-same-origin" srcdoc="{{ report_html }}"
+          onload="this.style.height=(this.contentDocument.body.scrollHeight+4)+'px';"></iframe>
 </section>
 {% endblock %}
