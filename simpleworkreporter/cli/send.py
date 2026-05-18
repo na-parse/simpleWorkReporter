@@ -16,7 +16,14 @@ logger = logging.getLogger(__name__)
 
 def main(argv: list[str] | None = None) -> int:
     '''Send the current pending report.'''
-    parser = argparse.ArgumentParser(prog='send_report')
+    parser = argparse.ArgumentParser(
+        prog='swr send',
+        description=(
+            'Send the current pending report headlessly. Normal output goes '
+            'to stdout, errors go to stderr; cron operators can redirect '
+            'stdout to /dev/null and still receive errors via MAILTO.'
+        ),
+    )
     parser.add_argument(
         '-f', '--force',
         action='store_true',
@@ -28,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     configure_logging()
     if args.force:
-        logger.warning('send_report --force: bypassing send_lock freshness check')
+        logger.warning('swr send --force: bypassing send_lock freshness check')
     try:
         count = send_pending_report(WorkerSettings(), force=args.force)
     except MailSendError as exc:
@@ -41,11 +48,10 @@ def main(argv: list[str] | None = None) -> int:
         print(str(exc), file=sys.stderr)
         return 2
     logger.info('headless report send completed entries=%s', count)
-    if sys.stdout.isatty():
-        if count:
-            print(f'Sent report with {count} entries.')
-        else:
-            print('No unsent entries.')
+    if count:
+        print(f'Sent report with {count} entries.')
+    else:
+        print('No unsent entries.')
     return 0
 
 

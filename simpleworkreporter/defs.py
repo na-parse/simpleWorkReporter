@@ -1,6 +1,6 @@
 '''Application-wide constants and default values.
 
-Must remain dependency-free with respect to other swr2 modules.
+Must remain dependency-free with respect to other simpleworkreporter modules.
 '''
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from pathlib import Path
 
 APP_NAME = 'simpleWorkReporter'
 ENV_HOME = 'SWR_HOME'
-LOG_NAMESPACE = 'swr2'
+LOG_NAMESPACE = 'simpleworkreporter'
 
 
 # =============================================================================

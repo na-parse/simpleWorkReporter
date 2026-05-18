@@ -53,14 +53,14 @@ python3 -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
-./setup_server
+./swr setup
 ```
 
 Verify the service starts cleanly in the foreground before wiring it into a
 service manager:
 
 ```bash
-./start_server
+./swr start
 ```
 
 Open the browser, log in, add a throwaway entry, then stop the server with
@@ -123,7 +123,7 @@ unit under a new name and add an `Environment=` line:
 [Service]
 Environment=SWR_HOME=%h/.simpleWorkReporter-alice
 WorkingDirectory=%h/src/simpleWorkReporter-alice
-ExecStart=%h/src/simpleWorkReporter-alice/.venv/bin/python %h/src/simpleWorkReporter-alice/start_server
+ExecStart=%h/src/simpleWorkReporter-alice/.venv/bin/python %h/src/simpleWorkReporter-alice/swr start
 ```
 
 Each instance needs its own unit file (`simpleworkreporter-alice.service`),
@@ -141,7 +141,7 @@ survive a reboot.
 ```bash
 cd ~/src/simpleWorkReporter
 tmux new -d -s swr \
-  '. .venv/bin/activate && ./start_server 2>&1 | tee -a ~/.simpleWorkReporter/server.log'
+  '. .venv/bin/activate && ./swr start 2>&1 | tee -a ~/.simpleWorkReporter/server.log'
 ```
 
 What this does:
@@ -166,7 +166,7 @@ Detach again with `Ctrl-b d`.  Stop the service from inside the session with
 ```bash
 cd ~/src/simpleWorkReporter
 screen -dmS swr bash -c \
-  '. .venv/bin/activate && ./start_server 2>&1 | tee -a ~/.simpleWorkReporter/server.log'
+  '. .venv/bin/activate && ./swr start 2>&1 | tee -a ~/.simpleWorkReporter/server.log'
 ```
 
 Reattach with `screen -r swr`, detach with `Ctrl-a d`.
@@ -188,7 +188,7 @@ If you want the tmux session to come up on reboot without using systemd,
 add an `@reboot` cron entry:
 
 ```cron
-@reboot tmux new -d -s swr 'cd $HOME/src/simpleWorkReporter && . .venv/bin/activate && ./start_server 2>&1 | tee -a $HOME/.simpleWorkReporter/server.log'
+@reboot tmux new -d -s swr 'cd $HOME/src/simpleWorkReporter && . .venv/bin/activate && ./swr start 2>&1 | tee -a $HOME/.simpleWorkReporter/server.log'
 ```
 
 This still requires the user's cron daemon to run at boot, which on many
@@ -223,13 +223,13 @@ py -3 -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
-python .\setup_server
+python .\swr setup
 ```
 
 Run the server in the foreground first to confirm everything works:
 
 ```powershell
-python .\start_server
+python .\swr start
 ```
 
 ### Option A -- Task Scheduler At Logon (Recommended)
@@ -239,19 +239,19 @@ A Scheduled Task started at user logon is the closest Windows equivalent to a
 user is logged in.
 
 Create a one-line wrapper batch file so the task definition stays simple --
-save as `%USERPROFILE%\src\simpleWorkReporter\deploy\start_server.bat`:
+save as `%USERPROFILE%\src\simpleWorkReporter\deploy\swr_start.bat`:
 
 ```bat
 @echo off
 cd /d "%USERPROFILE%\src\simpleWorkReporter"
-"%USERPROFILE%\src\simpleWorkReporter\.venv\Scripts\python.exe" start_server >> "%USERPROFILE%\.simpleWorkReporter\server.log" 2>&1
+"%USERPROFILE%\src\simpleWorkReporter\.venv\Scripts\python.exe" swr start >> "%USERPROFILE%\.simpleWorkReporter\server.log" 2>&1
 ```
 
 Register it with `schtasks`:
 
 ```powershell
 schtasks /Create /TN "simpleWorkReporter" /SC ONLOGON `
-  /TR "%USERPROFILE%\src\simpleWorkReporter\deploy\start_server.bat" /RL LIMITED
+  /TR "%USERPROFILE%\src\simpleWorkReporter\deploy\swr_start.bat" /RL LIMITED
 ```
 
 To stop, delete, or query the task:
@@ -267,11 +267,11 @@ finer control (restart on failure, run only when logged on, etc.).
 
 ### Option B -- Startup Folder Shortcut
 
-Simpler but more visible: drop a shortcut to `start_server.bat` into the
+Simpler but more visible: drop a shortcut to `swr_start.bat` into the
 user's startup folder.
 
 1. `Win+R`, then `shell:startup` -- opens the per-user Startup folder.
-2. Create a shortcut pointing at `deploy\start_server.bat`.
+2. Create a shortcut pointing at `deploy\swr_start.bat`.
 3. In the shortcut properties, set _Run_ to _Minimized_.
 
 The server will start in a minimized console window on every logon.  Closing
@@ -310,9 +310,9 @@ Use a reverse proxy when you want:
 
 ### App-Side Configuration
 
-1. Re-run the setup wizard and choose plain HTTP mode, or use `./cert_tool`
+1. Re-run the setup wizard and choose plain HTTP mode, or use `./swr cert`
    to remove `cert.pem` and `key.pem` from the data directory.  When neither
-   file is present, `./start_server` runs HTTP only.
+   file is present, `./swr start` runs HTTP only.
 2. Pick a service port that isn't `80` / `443` -- something like `8080` is
    fine.  The proxy will be the only thing talking to it.
 3. Restart the service.
@@ -324,7 +324,7 @@ Use a reverse proxy when you want:
 > reach it:
 >
 > ```bash
-> ./start_server --bind 127.0.0.1
+> ./swr start --bind 127.0.0.1
 > ```
 >
 > Update your `ExecStart=` line (systemd), tmux/screen launch command, or
@@ -416,4 +416,4 @@ read it from the proxy's own logs.
 | Service stops on logout (Linux) | `loginctl enable-linger $USER` not run. |
 | Port already in use | Another instance is running, or the previous foreground process didn't exit cleanly. |
 | HTTPS works locally but browser warns | Self-signed certificate -- expected.  Import the cert into the browser/OS trust store or front the app with a reverse proxy. |
-| Headless `./send_report` silent on success | Intentional -- it suppresses routine output when stdout isn't a TTY, so cron stays quiet. |
+| `./swr send` output noisy under cron | Normal status goes to stdout; redirect with `>/dev/null` so the scheduler only mails on stderr. |

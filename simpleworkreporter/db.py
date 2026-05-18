@@ -299,7 +299,7 @@ class send_lock:
     the operation forever.
 
     `force=True` skips the freshness guard entirely — the caller takes
-    over whatever claim exists. Reserved for the `send_report --force`
+    over whatever claim exists. Reserved for the `./swr send --force`
     operator escape hatch; logs loudly when it overrides a held claim.
     '''
 

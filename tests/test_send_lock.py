@@ -7,8 +7,8 @@ import time
 import unittest
 from pathlib import Path
 
-from swr2 import db
-from swr2.defs import SEND_LOCK_STALE_SECONDS
+from simpleworkreporter import db
+from simpleworkreporter.defs import SEND_LOCK_STALE_SECONDS
 
 from tests.support import TempHomeTestCase
 

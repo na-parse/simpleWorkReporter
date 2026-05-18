@@ -24,7 +24,7 @@ _configured = False
 
 
 def configure_logging() -> None:
-    '''Install handlers for the swr2 and werkzeug loggers. Idempotent.'''
+    '''Install handlers for the simpleworkreporter and werkzeug loggers. Idempotent.'''
     global _configured
     level_name = os.environ.get(LOG_LEVEL_ENV_VAR, DEFAULT_LOG_LEVEL).upper()
     level = getattr(logging, level_name, logging.INFO)

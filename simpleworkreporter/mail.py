@@ -46,7 +46,7 @@ class ReportFlagError(RuntimeError):
         super().__init__(
             f'Report sent to recipients ({count} entries) but database '
             f'flagging failed: {cause}. Task IDs left unflagged: {task_ids}. '
-            f'Re-running send will duplicate the email; clear via db_tool.'
+            f'Re-running send will duplicate the email; clear via ./swr db.'
         )
 
 

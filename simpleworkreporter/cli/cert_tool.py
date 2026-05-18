@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def main(argv: list[str] | None = None) -> int:
     '''Run certificate maintenance commands.'''
     configure_logging()
-    parser = argparse.ArgumentParser(prog='cert_tool')
+    parser = argparse.ArgumentParser(prog='swr cert')
     subparsers = parser.add_subparsers(dest='command')
     subparsers.add_parser('status', help='show current certificate state')
     subparsers.add_parser('create', help='create a self-signed pair (fails if files exist)')
@@ -72,7 +72,7 @@ def _create() -> int:
         print('Certificate or key file already exists; refusing to overwrite.', file=sys.stderr)
         print(f'  cert: {cert} ({"present" if cert.exists() else "missing"})', file=sys.stderr)
         print(f'  key : {key} ({"present" if key.exists() else "missing"})', file=sys.stderr)
-        print('Run ./cert_tool regen to replace.', file=sys.stderr)
+        print('Run ./swr cert regen to replace.', file=sys.stderr)
         return 1
     try:
         create_self_signed_cert(socket.gethostname())

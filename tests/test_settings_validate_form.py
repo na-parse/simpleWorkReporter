@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from swr2.defs import EMAIL_SUBJECT_DEFAULT
-from swr2.settings import WorkerSettings
+from simpleworkreporter.defs import EMAIL_SUBJECT_DEFAULT
+from simpleworkreporter.settings import WorkerSettings
 
 
 def _good_form(**overrides) -> dict:
