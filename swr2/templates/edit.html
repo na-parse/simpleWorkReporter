@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="panel narrow">
+  <div class="section-heading">
+    <h1>Edit Entry</h1>
+    {% if task.is_sent %}
+      <span class="badge muted">Sent {{ task.sent_date }}</span>
+    {% else %}
+      <span class="badge">Unsent</span>
+    {% endif %}
+  </div>
+  <form class="stack" method="post">
+    <label>
+      <span>Work date</span>
+      <input type="date" name="work_date" value="{{ task.display_date }}" required>
+    </label>
+    <label>
+      <span>Task</span>
+      <input name="task" value="{{ task.task }}" required maxlength="160">
+    </label>
+    <label>
+      <span>Description</span>
+      <textarea name="description" required rows="10">{{ task.description }}</textarea>
+    </label>
+    <div class="actions">
+      <button class="primary" type="submit">Save</button>
+      <a class="button" href="{{ url_for('dashboard') }}">Cancel</a>
+      <a class="danger-link" href="{{ url_for('delete_task', task_id=task.id) }}">Delete</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

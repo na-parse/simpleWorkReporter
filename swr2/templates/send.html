@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Report - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="panel wide">
+  <div class="section-heading send-heading">
+    <div class="send-title">
+      <h1>Send Report</h1>
+      <span class="badge">{{ tasks|length }} entries</span>
+    </div>
+    <form class="actions send-actions" method="post">
+      <button class="primary" type="submit">Send Report</button>
+      <a class="button" href="{{ url_for('dashboard') }}">Back</a>
+    </form>
+  </div>
+  <div class="report-preview">
+    {{ report_html|safe }}
+  </div>
+</section>
+{% endblock %}

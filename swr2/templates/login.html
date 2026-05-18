@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="login-panel">
+  <h1>{{ app_name }}</h1>
+  <form
+    class="stack"
+    action="{{ url_for('login_post', next=request.args.get('next', '')) }}"
+    method="post"
+  >
+    <label>
+      <span>Access passphrase</span>
+      <input type="password" name="passphrase" autofocus>
+    </label>
+    <button class="primary" type="submit">Enter</button>
+  </form>
+</section>
+{% endblock %}

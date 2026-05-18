@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="panel narrow">
+  <h1>Delete Entry</h1>
+  <article class="entry-card">
+    <div class="entry-title">
+      <span>{{ task.display_date }}</span>
+      <strong>{{ task.task }}</strong>
+    </div>
+    <p>{{ task.description|description_html }}</p>
+  </article>
+  <form class="actions" method="post">
+    <button class="danger" type="submit">Delete Permanently</button>
+    <a class="button" href="{{ url_for('edit_task', task_id=task.id) }}">Cancel</a>
+  </form>
+</section>
+{% endblock %}

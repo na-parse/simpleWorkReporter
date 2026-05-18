@@ -1,0 +1,1 @@
+'''simpleWorkReporter application package.'''

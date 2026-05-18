@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='appicon-rounded.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='appicon-rounded.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='swr2.css') }}">
+</head>
+<body class="theme-{{ theme }}">
+  <header class="app-header">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <img class="brand-icon" src="{{ url_for('static', filename='appicon-rounded.png') }}" alt="">
+      <span>{{ app_name }}</span>
+    </a>
+    {% if session.get('authenticated') %}
+      <div class="report-route" aria-label="Report routing">
+        <span class="route-name">{{ settings.worker_name or 'Worker' }}</span>
+        <span class="route-email">{{ settings.worker_email or 'No worker email' }}</span>
+        <span class="route-arrow">→</span>
+        <span class="route-name">{{ settings.manager_name or 'Manager' }}</span>
+        <span class="route-email">{{ settings.manager_email or 'No manager email' }}</span>
+      </div>
+      <nav class="nav">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('tasks') }}">All Tasks</a>
+        <a href="{{ url_for('configure') }}">Config</a>
+        <a href="{{ url_for('theme') }}">Theme</a>
+        <a class="nav-primary" href="{{ url_for('send_report') }}">Send {{ unsent_count }}</a>
+        <form action="{{ url_for('logout') }}" method="post">
+          <button class="link-button" type="submit">Logout</button>
+        </form>
+      </nav>
+    {% endif %}
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes" role="status" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}" role="alert">
+            <span class="flash-message">{{ message }}</span>
+            <button type="button" class="flash-close" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="shell">
+    {% block body %}{% endblock %}
+  </main>
+
+  <script>
+    (function () {
+      var TOAST_MS = 20000;
+      var FADE_MS = 250;
+      function dismiss(el) {
+        if (!el || el.dataset.dismissing) return;
+        el.dataset.dismissing = '1';
+        el.classList.add('flash-leaving');
+        setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, FADE_MS);
+      }
+      var flashes = document.querySelectorAll('.flashes .flash');
+      flashes.forEach(function (flash) {
+        var timer = setTimeout(function () { dismiss(flash); }, TOAST_MS);
+        var btn = flash.querySelector('.flash-close');
+        if (btn) btn.addEventListener('click', function () {
+          clearTimeout(timer);
+          dismiss(flash);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}All Tasks - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="panel wide">
+  <div class="section-heading">
+    <h1>All Tasks</h1>
+    <span class="badge">{{ tasks|length }}</span>
+  </div>
+  {% if tasks %}
+    <table class="task-table">
+      <colgroup>
+        <col class="date-column">
+        <col class="task-column">
+        <col>
+        <col class="sent-column">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Task</th>
+          <th>Description</th>
+          <th>Sent</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+          <tr>
+            <td class="mono">{{ task.display_date }}</td>
+            <td class="task-label">
+              <a href="{{ url_for('edit_task', task_id=task.id) }}">{{ task.task }}</a>
+            </td>
+            <td>{{ task.description|description_html }}</td>
+            <td class="sent-state">
+              {% if task.is_sent %}
+                <span class="mono">{{ task.sent_date }}</span>
+              {% else %}
+                <span class="badge">pending</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">No entries yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

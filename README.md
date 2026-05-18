@@ -2,72 +2,73 @@
 
 simpleWorkReporter is a simple web-app designed to streamline the regular _work summary_ email your manager asks you to send.  Yes, you're already tracking your work in the ticket system, your code check-ins are easily auditable, and they could just duck into your team stand-ups every now and again, but here we are.
 
-## Installation
+Add short work entries during the day, review the pending list, and send it off as a formatted SMTP report.  Sent entries stay in history.  It is a single-user, self-hosted tool -- not a team tracker.
 
-### Dependencies / Pre-requisites
+## Quick Start
 
-simpleWorkReport requires python >= 3.9 as well as the additional `flask` and `cryptography` packages.  
+Clone the repo, set up a virtualenv, run the setup wizard, and start the server.
 
 ```bash
-python3 -m pip install flask
-python3 -m pip install cryptography
+git clone https://github.com/na-parse/simpleWorkReporter.git
+cd ./simpleWorkReporter
+
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+
+./setup_server
+./start_server
 ```
 
-### Clone and Setup the repository
+The setup wizard walks through worker/manager identity, SMTP settings, service port, an optional access passphrase, and HTTP vs HTTPS mode.  Once running, point a browser at the configured port and start adding tasks.
 
-The simpleWorkReporter repository is quick and easy to get started.  Clone the repository on the system you'd like to serve as the web-app host and make sure you know a TCP port you'd like to use ahead of time.
+![simpleWorkReporter pending tasks view](./assets/simpleWorkReporter_PendingTasks.jpg)
 
 > [!NOTE]
-> The internal SMTP mailer currently only supports non-TLS port 25.  I'm too lazy/dumb to implement TLS right now mostly due to being a noob when it comes to credential embedding and management.  It's on the roadmap.
+> Detailed deployment notes -- system dependencies, running behind a reverse proxy, systemd, multi-instance layouts -- will live in `./deploy/DEPLOYING.md`.
+
+## Sending the Report
+
+Reports can be sent two ways:
+
+- **From the web app** -- the _Send Report_ button in the header opens a preview of the pending entries and current SMTP settings.  Confirming on that page sends the mail; visiting the URL alone does not.  On success, the included entries are marked sent and the dashboard returns to an empty pending list.  On failure, entries stay pending and the SMTP error is shown.
+- **From the CLI** -- `./send_report` sends the current pending report headlessly, with no confirmation prompt.  This is intended for cron or another scheduler.  When stdout isn't a TTY routine output is suppressed; errors go to stderr so schedulers don't generate noise on a clean run.
 
 ```bash
-# Clone the repo into ./simpleWorkReporter
-git clone https://github.com/na-parse/simpleWorkReporter.git
-
-# Setup the service
-cd ./simpleWorkReporter
-python ./setupService.py
+SWR_HOME=/path/to/data /path/to/checkout/send_report
 ```
 
-## Starting your simpleWorkReporter Instance
+## HTTP vs HTTPS
 
-After completing setup, start the service:
+The service binds to `0.0.0.0` on the configured port by default, so it is reachable from the LAN.  Pass `--bind 127.0.0.1` (or `-b 127.0.0.1`) to `./start_server` to restrict it to loopback -- useful when fronting the app with a reverse proxy on the same host.
 
-`python ./startService.py`
+It runs in one of two modes:
 
-Because this is intended for single user use, the basic flask/Werkzeug server is used in debug mode.  You will be able to confirm your available URLs from the Werkzeug startup.
+- **Self-signed HTTPS** for stand-alone operation.  Setup can generate `cert.pem` and `key.pem` in the data directory.  When both exist, `./start_server` runs HTTPS only.
+- **Plain HTTP** for local-only use or when nginx, Apache, Caddy, or another reverse proxy terminates HTTPS in front of the app.  Startup prints a warning in this mode.
 
-## Usage
+Re-running `./setup_server` shows the current certificate state and offers a menu to add, replace, or remove the cert files.
 
-Open a webpage to your specified host and port and start adding work tasks!
+## SMTP
 
-![simpleWorkReporter homepage](/simpleWorkReporter/static/images/simpleWorkReporter_home.png)
+Reports are sent from the worker address to the manager address (worker is copied).  Three SMTP modes are supported:
 
-## Sending the Report - Manually
+- **STARTTLS** with authentication -- normally port `587`.
+- **Implicit TLS / SMTPS** with authentication -- normally port `465`.
+- **Plain SMTP** without authentication -- normally port `25`.
 
-Report can be sent manually via the webapp by clicking on the _Send Daily Report_.  This loads another page allowing you to review pending tasks and the current email settings before sending the report.
+Authenticated plain SMTP and unauthenticated TLS SMTP are intentionally not supported.  The stored SMTP password is never shown in the UI; leave the replacement field blank on the config page to keep the existing value.
 
-Clicking _Send_ will immediately send the email.  TODO: Script performs email exchange with remote SMTP server before any response on the client side.  Need to add some 'click-once' javascript to prevent multi-submission conflicts.
+## Tools
 
-## Sending the Report - CLI or Scheduled
+A handful of helper scripts ship alongside the main server commands.  These are for developers and one-off maintenance -- they aren't part of normal day-to-day use.
 
-The simpleWorkReporter package includes the script `sendReport.py` to initiate the report email from the command line.  This can be used with task schedulers such as cron to setup automatic report transmission.
+| Script | Purpose |
+| --- | --- |
+| `./setup_server` | Interactive setup wizard. |
+| `./start_server` | Start the local web service. |
+| `./send_report` | Send the pending report headlessly (for cron). |
+| `./cert_tool` | Manage the self-signed HTTPS certificate. |
+| `./db_tool` | Initialize, migrate, or seed the SQLite database. |
 
-Note that sendReport.py will immediately send the email without asking for confirmation.  Additionally, no stdout output is generated when it runs headless so schedulers do not generate excessive result emails.
-
-
-## Dev Roadmap
-
-- Mailer
-  - Add a web-app based API for sending email to remove necessity for local system scheduler
-- Appearance
-  - Support for a Dark Mode for the interface
-
-
-## About
-
-This project mainly originates from my laziness.  I don't want to have an extra text document open somewhere that I constantly have to update and maintain with data and formatting, reset between sends, lose and search for.
-
-Having a webpage open on a tab in my browser seemed easy and non-invasive, and then the natural progress of "just make a little web app to take some text fields and send it automatically" came about.
-
-Primarily this was a reason to try and improve my python code organization skills, get some more experience with flask and jinja2 templates, and get back into a little HTML after 20 years of being out of the web game.  Add on benefits of getting some more experience with github, and keeping a mind towards building an app for 'users' rather than myself.
+`./db_tool demo` will load varied fixture entries for visual testing.  Add `--clear` to wipe existing tasks first, and `-y` for non-interactive use.  Don't point it at a real working database.
