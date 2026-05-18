@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Config - {{ app_name }}{% endblock %}
+
+{# Preserve submitted form values on validation failure so the user sees what
+   they typed (not the old saved value) next to any field-specific error. #}
+{% macro form_value(name, default) -%}
+{{- submitted[name] if submitted is not none else default -}}
+{%- endmacro %}
+
+{% macro field_error(name) -%}
+{% if field_errors.get(name) %}
+  <small class="field-error-message">{{ field_errors[name] }}</small>
+{% endif %}
+{%- endmacro %}
+
+{% macro invalid_class(name) -%}
+{{- 'is-invalid' if field_errors.get(name) else '' -}}
+{%- endmacro %}
+
+{% block body %}
+<section class="panel wide">
+  <h1>Configuration</h1>
+  <p class="hint">
+    Changes saved here take effect immediately. Edits made directly to
+    <code>worker.conf</code> while the service is running require a restart.
+  </p>
+  <form class="config-grid" method="post">
+    <fieldset>
+      <legend>Identity</legend>
+      <label>
+        <span>Worker name</span>
+        <input
+          name="worker_name"
+          class="{{ invalid_class('worker_name') }}"
+          value="{{ form_value('worker_name', settings.worker_name) }}"
+          required
+        >
+        {{ field_error('worker_name') }}
+      </label>
+      <label>
+        <span>Worker email</span>
+        <input
+          type="email"
+          name="worker_email"
+          class="{{ invalid_class('worker_email') }}"
+          value="{{ form_value('worker_email', settings.worker_email) }}"
+          required
+        >
+        {{ field_error('worker_email') }}
+      </label>
+      <label>
+        <span>Manager name</span>
+        <input
+          name="manager_name"
+          class="{{ invalid_class('manager_name') }}"
+          value="{{ form_value('manager_name', settings.manager_name) }}"
+          required
+        >
+        {{ field_error('manager_name') }}
+      </label>
+      <label>
+        <span>Manager email</span>
+        <input
+          type="email"
+          name="manager_email"
+          class="{{ invalid_class('manager_email') }}"
+          value="{{ form_value('manager_email', settings.manager_email) }}"
+          required
+        >
+        {{ field_error('manager_email') }}
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>SMTP</legend>
+      <p class="form-note">
+        TLS modes require authentication. Plain SMTP uses no authentication.
+      </p>
+      <label>
+        <span>SMTP server address</span>
+        <input
+          name="smtp_host"
+          class="{{ invalid_class('smtp_host') }}"
+          value="{{ form_value('smtp_host', settings.smtp.host) }}"
+          required
+          maxlength="253"
+          pattern="(([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?)|(\[[0-9A-Fa-f:]+\])"
+          title="Enter a valid IPv4 address, IPv6 in brackets (e.g. [::1]), or hostname/FQDN."
+        >
+        {{ field_error('smtp_host') }}
+      </label>
+      <label>
+        <span>Security mode</span>
+        {% set selected_security = form_value('smtp_security', settings.smtp.security_mode) %}
+        <select
+          id="smtp_security"
+          name="smtp_security"
+          class="{{ invalid_class('smtp_security') }}"
+          required
+        >
+          <option value="starttls" {% if selected_security == 'starttls' %}selected{% endif %}>
+            STARTTLS (default port 587)
+          </option>
+          <option value="smtps" {% if selected_security == 'smtps' %}selected{% endif %}>
+            Implicit TLS / SMTPS (default port 465)
+          </option>
+          <option value="none" {% if selected_security == 'none' %}selected{% endif %}>
+            None / plain SMTP (default port 25)
+          </option>
+        </select>
+        {{ field_error('smtp_security') }}
+      </label>
+      <label>
+        <span>SMTP port</span>
+        <input
+          name="smtp_port"
+          id="smtp_port"
+          class="{{ invalid_class('smtp_port') }}"
+          value="{{ form_value('smtp_port', settings.smtp.effective_port) }}"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          required
+        >
+        {{ field_error('smtp_port') }}
+      </label>
+      <label>
+        <span>Username</span>
+        <input
+          name="smtp_username"
+          id="smtp_username"
+          class="{{ invalid_class('smtp_username') }}"
+          value="{{ form_value('smtp_username', settings.smtp.username) }}"
+        >
+        {{ field_error('smtp_username') }}
+      </label>
+      <label>
+        <span>New password</span>
+        <input
+          type="password"
+          name="smtp_password"
+          id="smtp_password"
+          class="{{ invalid_class('smtp_password') }}"
+          autocomplete="new-password"
+        >
+        {{ field_error('smtp_password') }}
+      </label>
+    </fieldset>
+
+    <div class="actions full-row">
+      <button class="primary" type="submit">Save Config</button>
+      <a class="button" href="{{ url_for('dashboard') }}">Back</a>
+      <p class="config-notice">
+        Application service port and HTTP/HTTPS selection can only be
+        changed via the CLI <code>setup_server</code> command.
+      </p>
+    </div>
+  </form>
+</section>
+<script>
+  const smtpSecurity = document.getElementById('smtp_security');
+  const smtpPort = document.getElementById('smtp_port');
+  const smtpUsername = document.getElementById('smtp_username');
+  const smtpPassword = document.getElementById('smtp_password');
+  const smtpDefaults = { starttls: '587', smtps: '465', none: '25' };
+  let lastDefault = smtpDefaults[smtpSecurity.value];
+
+  function syncCredentialFields() {
+    const plain = smtpSecurity.value === 'none';
+    if (plain) {
+      smtpUsername.value = '';
+      smtpPassword.value = '';
+    }
+    smtpUsername.disabled = plain;
+    smtpPassword.disabled = plain;
+  }
+
+  smtpSecurity.addEventListener('change', () => {
+    const nextDefault = smtpDefaults[smtpSecurity.value];
+    if (!smtpPort.value || smtpPort.value === lastDefault) {
+      smtpPort.value = nextDefault;
+    }
+    lastDefault = nextDefault;
+    syncCredentialFields();
+  });
+
+  syncCredentialFields();
+</script>
+{% endblock %}

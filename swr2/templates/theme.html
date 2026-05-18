@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Theme - {{ app_name }}{% endblock %}
+
+{% block body %}
+<section class="panel wide">
+  <h1>Theme</h1>
+  <form class="theme-grid" method="post">
+    {% for item in themes %}
+      <button
+        class="theme-card theme-card-{{ item }} {% if theme == item %}selected{% endif %}"
+        name="theme"
+        value="{{ item }}"
+        type="submit"
+      >
+        <span class="palette-preview" aria-hidden="true">
+          <span class="palette-dominant"></span>
+          <span class="palette-secondary"></span>
+          <span class="palette-accent"></span>
+        </span>
+        <span class="theme-name">{{ item }}</span>
+      </button>
+    {% endfor %}
+  </form>
+</section>
+{% endblock %}

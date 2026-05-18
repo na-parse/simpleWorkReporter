@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="dashboard-grid">
+  <section class="panel">
+    <h1>New Entry</h1>
+    <form class="stack entry-form" method="post">
+      <label>
+        <span>Task</span>
+        <input name="task" required maxlength="160" autocomplete="off">
+      </label>
+      <label>
+        <span>Description</span>
+        <textarea name="description" required rows="10"></textarea>
+      </label>
+      <label class="checkbox-row">
+        <input id="manual_date" type="checkbox" name="manual_date">
+        <span>Set work date</span>
+      </label>
+      <label class="manual-date-row">
+        <span>Work date</span>
+        <input type="date" name="work_date">
+      </label>
+      <button class="primary" type="submit">Add Entry</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-heading">
+      <h1>Unsent</h1>
+      <span class="badge">{{ tasks|length }}</span>
+    </div>
+    {% if tasks %}
+      <div class="entry-list">
+        {% for task in tasks %}
+          <article class="entry-card">
+            <a class="entry-title" href="{{ url_for('edit_task', task_id=task.id) }}">
+              <span>{{ task.display_date }}</span>
+              <strong>{{ task.task }}</strong>
+            </a>
+            <p>{{ task.description|description_html }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty">No unsent entries.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

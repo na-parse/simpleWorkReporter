@@ -1,0 +1,13 @@
+[Unit]
+Description=simpleWorkReporter web service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/simpleWorkReporter
+ExecStart=%h/src/simpleWorkReporter/.venv/bin/python %h/src/simpleWorkReporter/start_server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

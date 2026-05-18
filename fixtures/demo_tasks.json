@@ -1,0 +1,72 @@
+[
+  {
+    "task": "Ticket 41028",
+    "description": "Replaced a failed disk in the primary storage shelf and confirmed the rebuild completed cleanly.",
+    "days_ago": 0
+  },
+  {
+    "task": "ServReq 88214",
+    "description": "Granted the new analyst read access to the internal reporting share. Confirmed group membership propagated and noted the expiry date on the request.",
+    "days_ago": 0
+  },
+  {
+    "task": "Development - Inventory Tool",
+    "description": "Added a host-state column to the inventory listing and tightened the filter logic so retired hosts no longer surface in the default view.\n\nFollowed up with a pass over the export path so the CSV column order matches the on-screen layout.",
+    "days_ago": 0
+  },
+  {
+    "task": "Meeting - Vendor Sync",
+    "description": "Walked through open support items and the next firmware revision. Vendor will send a revised compatibility matrix and confirm the test-bench schedule.",
+    "days_ago": 1
+  },
+  {
+    "task": "Incident 30557",
+    "description": "Investigated intermittent latency on the internal API path after the morning rollout.\nCorrelated the spikes with cold cache reads on two backend nodes and let the warmup complete before rolling the change forward to the remaining hosts.",
+    "days_ago": 1
+  },
+  {
+    "task": "Development - Credential Helper",
+    "description": "Reworked the credential helper to accept an explicit signer argument rather than deriving one from the local user context. The change lets stored credentials move between operator workstations without re-encoding.\n\nNormalized the public function signatures so callers consistently pass username before password, and updated the affected unit tests.\n\nAlso pruned an unused legacy import path that has not been called since the last refactor.",
+    "days_ago": 2
+  },
+  {
+    "task": "Ticket 41099",
+    "description": "More duplicate-account cleanup requests from the helpdesk queue.",
+    "days_ago": 2
+  },
+  {
+    "task": "Meeting - Weekly Ops Sync",
+    "description": "Weekly operations sync. Captured outstanding blockers and assigned owners for follow-up.",
+    "days_ago": 3
+  },
+  {
+    "task": "ServReq 88107",
+    "description": "Provisioned a small VM for the data team's batch job runner. Confirmed it could reach the staging database and documented the decommission criteria.",
+    "days_ago": 3
+  },
+  {
+    "task": "Development - Report Tooling",
+    "description": "Unified the report preview path so the browser preview and the delivered email render from the same template.\n\nCollapsed runs of blank lines in task descriptions so reports stay readable without the operator having to hand-edit spacing.",
+    "days_ago": 4
+  },
+  {
+    "task": "Vendor Follow-up",
+    "description": "Sent notes from the integration review and asked for confirmation on the two outstanding questions about the certificate rotation window.",
+    "days_ago": 5
+  },
+  {
+    "task": "Ticket 40988",
+    "description": "Closed out stale lab reservations and merged the duplicate entries.",
+    "days_ago": 6
+  },
+  {
+    "task": "Incident 30501",
+    "description": "Triaged a monitoring page on the rack-level power draw alert.\n\nWalked the floor, confirmed no physical fault, and traced the spike to a scheduled imaging run that had been moved without updating the noise window. Coordinated with the requesting team to either restore the original window or extend the alert exclusion.\n\nUpdated the runbook so the next on-call can resolve the same case without a floor walk.",
+    "days_ago": 7
+  },
+  {
+    "task": "ServReq 88044",
+    "description": "Rotated the shared service account password and refreshed the entries in the credential store.",
+    "days_ago": 8
+  }
+]
