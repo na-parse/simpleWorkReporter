@@ -113,7 +113,7 @@ SMTP_CONNECT_TIMEOUT = 30
 # Mail Report Strings
 # =============================================================================
 
-EMAIL_SUBJECT_DEFAULT = 'Work Summary Report for %w%: %d%'
+EMAIL_SUBJECT_DEFAULT = 'Work Summary Report for %w% : %d%'
 REPORT_NO_ENTRIES_LABEL = 'No entries'
 
 # Template tokens recognized in the report email subject. Substituted at
