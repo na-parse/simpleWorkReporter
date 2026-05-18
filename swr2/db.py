@@ -368,7 +368,7 @@ def date_range(tasks: list[Task]) -> str:
     end = max(dates)
     if start == end:
         return start
-    return f'{start} to {end}'
+    return f'{start} - {end}'
 
 
 def now_stamp() -> int:

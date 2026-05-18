@@ -132,7 +132,7 @@ class DateHelperTests(unittest.TestCase):
             db.Task(id=3, task='C', description='c',
                     timestamp=_epoch(2026, 3, 7), sent=None),
         ]
-        self.assertEqual('2026-03-06 to 2026-03-09', db.date_range(tasks))
+        self.assertEqual('2026-03-06 - 2026-03-09', db.date_range(tasks))
 
     def test_date_to_timestamp_today_returns_now(self) -> None:
         before = int(time.time())

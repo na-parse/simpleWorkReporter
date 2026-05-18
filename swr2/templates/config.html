@@ -73,6 +73,25 @@
     </fieldset>
 
     <fieldset>
+      <legend>Report</legend>
+      <label>
+        <span>Email subject</span>
+        <input
+          name="report_subject"
+          class="{{ invalid_class('report_subject') }}"
+          value="{{ form_value('report_subject', settings.report_subject) }}"
+          maxlength="200"
+        >
+        {{ field_error('report_subject') }}
+        <small class="form-note">
+          Tokens: <code>%w%</code> worker name, <code>%m%</code> manager name,
+          <code>%d%</code> report date or date range. Leave blank to restore
+          the default subject.
+        </small>
+      </label>
+    </fieldset>
+
+    <fieldset>
       <legend>SMTP</legend>
       <p class="form-note">
         TLS modes require authentication. Plain SMTP uses no authentication.

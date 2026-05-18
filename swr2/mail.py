@@ -15,9 +15,11 @@ from . import db
 from .settings import WorkerSettings
 from .defs import (
     APP_NAME,
-    EMAIL_SUBJECT_PREFIX,
     REPORT_NO_ENTRIES_LABEL,
     SMTP_CONNECT_TIMEOUT,
+    SUBJECT_TOKEN_DATES,
+    SUBJECT_TOKEN_MANAGER,
+    SUBJECT_TOKEN_WORKER,
 )
 from .formatting import description_html
 
@@ -65,12 +67,27 @@ def render_report_html(settings: WorkerSettings, tasks: list[db.Task]) -> str:
     )
 
 
+def render_subject(
+    template: str, settings: WorkerSettings, tasks: list[db.Task]
+) -> str:
+    '''Substitute %w%, %m%, %d% tokens in a subject template.
+
+    %d% expands to db.date_range() — a single date or 'YYYY-MM-DD - YYYY-MM-DD'
+    range — falling back to REPORT_NO_ENTRIES_LABEL when there are no tasks.
+    '''
+    date_token = db.date_range(tasks) or REPORT_NO_ENTRIES_LABEL
+    return (
+        template
+        .replace(SUBJECT_TOKEN_WORKER, settings.worker_name)
+        .replace(SUBJECT_TOKEN_MANAGER, settings.manager_name)
+        .replace(SUBJECT_TOKEN_DATES, date_token)
+    )
+
+
 def build_message(settings: WorkerSettings, tasks: list[db.Task]) -> EmailMessage:
     '''Build an email message for the pending report.'''
-    report_range = db.date_range(tasks)
-    subject_date = report_range or REPORT_NO_ENTRIES_LABEL
     message = EmailMessage()
-    message['Subject'] = f'{EMAIL_SUBJECT_PREFIX} {subject_date}'
+    message['Subject'] = render_subject(settings.report_subject, settings, tasks)
     message['From'] = f'{settings.worker_name} <{settings.worker_email}>'
     message['To'] = f'{settings.manager_name} <{settings.manager_email}>'
     message['Cc'] = settings.worker_email

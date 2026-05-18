@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unittest
 
+from swr2.defs import EMAIL_SUBJECT_DEFAULT
 from swr2.settings import WorkerSettings
 
 
@@ -36,6 +37,21 @@ class ValidateFormHappyPathTests(unittest.TestCase):
         self.assertEqual(587, kwargs['smtp_port'])
         self.assertEqual('worker', kwargs['smtp_username'])
         self.assertEqual('secret', kwargs['smtp_password'])
+
+    def test_blank_report_subject_falls_back_to_default(self) -> None:
+        kwargs, errors = WorkerSettings.validate_form(
+            _good_form(report_subject=''), existing_credentials=False
+        )
+        self.assertEqual({}, errors)
+        self.assertEqual(EMAIL_SUBJECT_DEFAULT, kwargs['report_subject'])
+
+    def test_report_subject_round_trips(self) -> None:
+        kwargs, errors = WorkerSettings.validate_form(
+            _good_form(report_subject='Weekly for %w%'),
+            existing_credentials=False,
+        )
+        self.assertEqual({}, errors)
+        self.assertEqual('Weekly for %w%', kwargs['report_subject'])
 
     def test_plain_smtp_strips_credentials(self) -> None:
         kwargs, errors = WorkerSettings.validate_form(

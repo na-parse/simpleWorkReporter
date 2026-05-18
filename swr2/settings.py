@@ -21,6 +21,7 @@ from .credparser import CredParser
 from .credparser.errors import DecodeFailure, EncodeFailure, UsageError
 from .defs import (
     DEFAULT_SERVICE_PORT,
+    EMAIL_SUBJECT_DEFAULT,
     SMTP_SECURITY_ALIASES,
     SMTP_SECURITY_DEFAULT,
     SMTP_SECURITY_DEFAULT_PORTS,
@@ -159,6 +160,7 @@ class WorkerSettings:
     worker_email: str
     manager_name: str
     manager_email: str
+    report_subject: str
     service_port: int
     use_https: bool
     access_hash: str
@@ -180,6 +182,9 @@ class WorkerSettings:
         self.worker_email = parser.get('identity', 'worker_email', fallback='')
         self.manager_name = parser.get('identity', 'manager_name', fallback='')
         self.manager_email = parser.get('identity', 'manager_email', fallback='')
+        self.report_subject = parser.get(
+            'report', 'subject', fallback=EMAIL_SUBJECT_DEFAULT
+        ).strip() or EMAIL_SUBJECT_DEFAULT
         self.service_port = parser.getint(
             'service', 'port', fallback=DEFAULT_SERVICE_PORT
         )
@@ -215,6 +220,7 @@ class WorkerSettings:
         '''
         parser = self._read_parser(self.config_path)
         _apply_identity(parser, fields)
+        _apply_report(parser, fields)
         _apply_service(parser, fields)
         _apply_smtp(parser, fields)
         _apply_access(parser, fields)
@@ -277,6 +283,8 @@ class WorkerSettings:
             form.get('manager_email', ''), 'manager_email', 'Manager email', errors
         )
 
+        report_subject = form.get('report_subject', '').strip() or EMAIL_SUBJECT_DEFAULT
+
         try:
             security_mode = SmtpSecurity.parse(form.get('smtp_security', ''))
         except ValueError as exc:
@@ -318,6 +326,7 @@ class WorkerSettings:
             'worker_email': worker_email,
             'manager_name': manager_name,
             'manager_email': manager_email,
+            'report_subject': report_subject,
             'smtp_host': smtp_host,
             'smtp_security': security_mode,
             'smtp_port': port,
@@ -392,6 +401,13 @@ def _apply_identity(
             parser['identity'][key] = str(fields[key])
 
 
+def _apply_report(
+    parser: configparser.ConfigParser, fields: Mapping[str, object]
+) -> None:
+    if 'report_subject' in fields:
+        parser['report']['subject'] = str(fields['report_subject'])
+
+
 def _apply_service(
     parser: configparser.ConfigParser, fields: Mapping[str, object]
 ) -> None:
@@ -450,12 +466,17 @@ def _apply_access(
 
 def _default_parser() -> configparser.ConfigParser:
     '''Return a config parser populated with expected sections and defaults.'''
-    parser = configparser.ConfigParser()
+    # interpolation=None: the report subject template uses bare %w% / %m% / %d%
+    # tokens which BasicInterpolation would treat as malformed %(...)s refs.
+    parser = configparser.ConfigParser(interpolation=None)
     parser['identity'] = {
         'worker_name': '',
         'worker_email': '',
         'manager_name': '',
         'manager_email': '',
+    }
+    parser['report'] = {
+        'subject': EMAIL_SUBJECT_DEFAULT,
     }
     parser['smtp'] = {
         'host': '',
