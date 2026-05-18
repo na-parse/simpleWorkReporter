@@ -113,8 +113,15 @@ SMTP_CONNECT_TIMEOUT = 30
 # Mail Report Strings
 # =============================================================================
 
-EMAIL_SUBJECT_PREFIX = 'Work report:'
+EMAIL_SUBJECT_DEFAULT = 'Work Summary Report for %w%: %d%'
 REPORT_NO_ENTRIES_LABEL = 'No entries'
+
+# Template tokens recognized in the report email subject. Substituted at
+# send time by mail.render_subject() from the active WorkerSettings and
+# the computed task date range.
+SUBJECT_TOKEN_WORKER = '%w%'
+SUBJECT_TOKEN_MANAGER = '%m%'
+SUBJECT_TOKEN_DATES = '%d%'
 
 
 # =============================================================================

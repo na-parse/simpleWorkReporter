@@ -36,24 +36,46 @@ def seed_demo_tasks(clear: bool = False) -> int:
 def main(argv: list[str] | None = None) -> int:
     '''Run database maintenance commands.'''
     configure_logging()
-    parser = argparse.ArgumentParser(prog='db_tool')
-    subparsers = parser.add_subparsers(dest='command')
-    subparsers.add_parser('init', help='initialize or validate the database')
-    demo_parser = subparsers.add_parser('demo', help='insert demo work entries')
+    parser = argparse.ArgumentParser(
+        prog='db_tool',
+        description=(
+            'Database maintenance for simpleWorkReporter. A subcommand is '
+            'required; running without one prints this help and exits.'
+        ),
+    )
+    subparsers = parser.add_subparsers(dest='command', metavar='COMMAND')
+    subparsers.add_parser(
+        'init',
+        help='create the tasks database if missing, then validate its schema',
+        description=(
+            'Create the tasks database file at the configured path if it does '
+            'not exist, then validate that the schema matches the current '
+            'application version. Safe to run repeatedly.'
+        ),
+    )
+    demo_parser = subparsers.add_parser(
+        'demo',
+        help='insert sample tasks from fixtures/demo_tasks.json',
+        description=(
+            'Seed the database with sample task records from the bundled '
+            'demo fixture. Implies init.'
+        ),
+    )
     demo_parser.add_argument(
         '--clear',
         action='store_true',
-        help='delete existing tasks before inserting demo entries',
+        help='delete every existing task before inserting demo entries',
     )
     demo_parser.add_argument(
         '-y',
         '--yes',
         action='store_true',
-        help='confirm destructive demo --clear without prompting',
+        help='skip the interactive confirmation for --clear',
     )
     args = parser.parse_args(argv)
     if args.command is None:
-        return init([])
+        parser.print_help(sys.stderr)
+        return 2
     if args.command == 'init':
         return init([])
     if args.command == 'demo':

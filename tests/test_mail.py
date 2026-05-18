@@ -4,11 +4,13 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from swr2.db import Task
+from swr2.defs import EMAIL_SUBJECT_DEFAULT, REPORT_NO_ENTRIES_LABEL
 from swr2.mail import (
     MailSendError,
     ReportFlagError,
     build_message,
     render_report_html,
+    render_subject,
     send_pending_report,
 )
 
@@ -50,7 +52,7 @@ class RenderReportHtmlTests(TempHomeTestCase):
         self.assertIn('Test Manager', html)
         self.assertIn('mailto:manager@example.com', html)
         self.assertIn('Report Period:', html)
-        self.assertIn('2026-03-06 to 2026-03-07', html)
+        self.assertIn('2026-03-06 - 2026-03-07', html)
 
     def test_plain_text_report_summarizes_sender_manager_and_period(self) -> None:
         settings = _settings('none')
@@ -71,6 +73,40 @@ class RenderReportHtmlTests(TempHomeTestCase):
         self.assertIn('Worker: Test Worker <worker@example.com>', text)
         self.assertIn('Manager: Test Manager <manager@example.com>', text)
         self.assertIn('Report Period: 2026-03-06', text)
+
+
+class RenderSubjectTests(TempHomeTestCase):
+    def test_substitutes_worker_manager_and_date_range(self) -> None:
+        settings = _settings('none')
+        tasks = [
+            Task(id=1, task='A', description='a',
+                 timestamp=_epoch(2026, 3, 6, 9, 0), sent=None),
+            Task(id=2, task='B', description='b',
+                 timestamp=_epoch(2026, 3, 7, 9, 0), sent=None),
+        ]
+        rendered = render_subject('%w% / %m% / %d%', settings, tasks)
+        self.assertEqual(
+            'Test Worker / Test Manager / 2026-03-06 - 2026-03-07', rendered
+        )
+
+    def test_default_subject_uses_worker_and_dates(self) -> None:
+        settings = _settings('none')
+        tasks = [
+            Task(id=1, task='A', description='a',
+                 timestamp=_epoch(2026, 3, 6, 9, 0), sent=None),
+        ]
+        message = build_message(settings, tasks)
+        # The settings factory leaves report_subject at its default.
+        self.assertEqual(EMAIL_SUBJECT_DEFAULT, settings.report_subject)
+        self.assertEqual(
+            'Work Summary Report for Test Worker: 2026-03-06',
+            message['Subject'],
+        )
+
+    def test_date_token_falls_back_to_no_entries_label(self) -> None:
+        settings = _settings('none')
+        rendered = render_subject('%d%', settings, [])
+        self.assertEqual(REPORT_NO_ENTRIES_LABEL, rendered)
 
 
 class SendPendingReportTransportTests(TempHomeTestCase):
