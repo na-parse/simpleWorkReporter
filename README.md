@@ -16,8 +16,8 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
 
-./swr setup
-./swr start
+python swr setup
+python swr start
 ```
 
 The setup wizard walks through worker/manager identity, SMTP settings, service port, an optional access passphrase, and HTTP vs HTTPS mode.  Once running, point a browser at the configured port and start adding tasks.
